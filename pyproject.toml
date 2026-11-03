@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=70.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "politica-simplificada"
+version = "0.1.0"
+description = "Backend da Plataforma de Guia Político"
+requires-python = ">=3.10"
+dependencies = [
+    "Flask>=3.0",
+    "Flask-SQLAlchemy>=3.1",
+    "Flask-CORS>=4.0",
+    "requests>=2.31",
+    "google-generativeai>=0.8.0",
+]
