@@ -4,8 +4,19 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from politica.ext.db import db
 
 if TYPE_CHECKING:
-    from politica.legislation.models import Agenda
+    from politica.legislation.models import Parlamentar
 
+
+class UsuarioParlamentar(db.Model):
+    __tablename__ = "usuario_parlamentar"
+
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
+    parlamentar_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey("parlamentar.id"), nullable=False)
+
+    # Relações bidirecionais apontando para as pontas
+    usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="parlamentares_seguidos")
+    parlamentar: Mapped["Parlamentar"] = relationship("Parlamentar", back_populates="seguidores")
 
 class Usuario(db.Model):
     __tablename__ = "usuarios"
@@ -18,10 +29,10 @@ class Usuario(db.Model):
     refresh_token: Mapped[str] = mapped_column(db.Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False, server_default=db.func.now())
 
-    # Relacionamento com a Agenda
-    agendas: Mapped[List["Agenda"]] = relationship(
-        "Agenda",
-        back_populates="usuario",
+    # Aqui é uma lista da CLASSE intermediária (porque guardamos dados da relação)
+    parlamentares_seguidos: Mapped[List["UsuarioParlamentar"]] = relationship(
+        "UsuarioParlamentar", 
+        back_populates="usuario", 
         cascade="all, delete-orphan"
     )
 

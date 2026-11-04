@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from politica.ext.db import db
 
 if TYPE_CHECKING:
-    from politica.auth.models import Usuario
+    from politica.auth.models import Usuario, UsuarioParlamentar
 
 
 # === Agenda (Feed Diário) ===
@@ -14,10 +14,8 @@ class Agenda(db.Model):
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     date: Mapped[date] = mapped_column(db.Date, nullable=False, unique=True, index=True)
     resumo: Mapped[Optional[str]] = mapped_column("Resumo", db.Text)
-    usuario_ref: Mapped[int] = mapped_column("Usuario_REF", db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
 
     # Relacionamentos
-    usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="agendas")
     projetos_lei: Mapped[List["ProjetoLei"]] = relationship("ProjetoLei", back_populates="agenda", cascade="all, delete-orphan")
     dias_especiais: Mapped[List["DiaEspecial"]] = relationship("DiaEspecial", back_populates="agenda", cascade="all, delete-orphan")
 
@@ -78,6 +76,9 @@ class Parlamentar(db.Model):
 
     # Relacionamentos
     historicos: Mapped[List["Historico"]] = relationship("Historico", back_populates="parlamentar", cascade="all, delete-orphan")
+    seguidores: Mapped[List["UsuarioParlamentar"]] = relationship(
+        "UsuarioParlamentar", back_populates="parlamentar", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Parlamentar id={self.id} nome='{self.nome} ({self.partido}/{self.estado})'>"

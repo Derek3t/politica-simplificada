@@ -1,8 +1,11 @@
 from flask import Flask
+from flask_migrate import Migrate
 from .config import Config
-from .ext.db import init_app as init_db
+from .ext.db import db, init_app as init_db
 from politica.auth import init_app as init_auth
 from politica.legislation import init_app as init_legislation
+
+migrate = Migrate()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -12,5 +15,7 @@ def create_app(config_class=Config):
     init_db(app)
     init_auth(app)
     init_legislation(app)
+
+    migrate.init_app(app, db)
 
     return app
