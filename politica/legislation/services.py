@@ -1,5 +1,5 @@
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -8,11 +8,17 @@ from politica.auth.models import UsuarioParlamentar
 from politica.errors import ErroApi, ErroServicoExterno
 from politica.extensions import db
 from politica.legislation import integracoes
-from politica.legislation.models import Agenda, DiaEspecial, Historico, Parlamentar, ProjetoLei
+from politica.legislation.models import Agenda, DiaEspecial, Historico, Parlamentar, ProjetoLei, Votacao
 
 logger = logging.getLogger(__name__)
 
 SIGLA_PLENARIO = "PLEN"
+DIAS_POR_PERIODO = {"hoje": 0, "semana": 6, "mes": 29}
+INTERVALO_SINCRONIZACAO = timedelta(minutes=10)
+TERMOS_DE_PROJETO = ("projeto de lei", "proposta de emenda", "medida provisória", "projeto de decreto legislativo")
+TERMOS_PROCEDIMENTAIS = ("requerimento", "regime de tramitação")
+STATUS_VOTACAO = {"aprovado": True, "rejeitado": False}
+sincronizacoes_votacoes = {}
 TIPOS_RELEVANTES = {"PL", "PLP", "PEC", "PDL", "MPV", "PLN", "PLV"}
 
 
@@ -165,6 +171,74 @@ def contextualizar_dia_especial(dia):
         setattr(dia, campo, valor)
     db.session.commit()
     return dia
+
+
+def intervalo_do_periodo(periodo):
+    fim = date.today()
+    return fim - timedelta(days=DIAS_POR_PERIODO[periodo]), fim
+
+
+def atualizar_votacao(votacao, dados):
+    registro = datetime.fromisoformat(dados["dataHoraRegistro"]) if dados.get("dataHoraRegistro") else None
+    votacao.data = date.fromisoformat(dados["data"])
+    votacao.horario = registro.time() if registro else None
+    votacao.objeto = dados.get("proposicaoObjeto")
+    votacao.descricao = dados.get("descricao") or "Sem descrição"
+    votacao.aprovada = {1: True, 0: False}.get(dados.get("aprovacao"))
+
+
+def eh_votacao_de_projeto(dados):
+    objeto = dados.get("proposicaoObjeto") or ""
+    descricao = (dados.get("descricao") or "").lower()
+    if any(termo in descricao for termo in TERMOS_PROCEDIMENTAIS):
+        return False
+    return objeto.split(" ")[0] in TIPOS_RELEVANTES or any(termo in descricao for termo in TERMOS_DE_PROJETO)
+
+
+def sincronizar_votacoes(inicio, fim):
+    ultima = sincronizacoes_votacoes.get((inicio, fim))
+    if ultima and datetime.now() - ultima < INTERVALO_SINCRONIZACAO:
+        return
+
+    try:
+        recebidas = integracoes.votacoes_do_periodo(inicio, fim)
+    except ErroServicoExterno:
+        if db.session.scalar(select(Votacao.id).where(Votacao.data.between(inicio, fim)).limit(1)) is None:
+            raise
+        logger.warning("Câmara indisponível, exibindo votações já salvas de %s a %s", inicio, fim)
+        return
+
+    existentes = {v.id_original: v for v in db.session.scalars(select(Votacao).where(Votacao.data.between(inicio, fim)))}
+    for dados in recebidas:
+        if not eh_votacao_de_projeto(dados):
+            continue
+        votacao = existentes.get(dados["id"])
+        if votacao is None:
+            votacao = Votacao(id_original=dados["id"])
+            db.session.add(votacao)
+        atualizar_votacao(votacao, dados)
+    db.session.commit()
+    sincronizacoes_votacoes[(inicio, fim)] = datetime.now()
+
+
+def listar_votacoes(filtros):
+    inicio, fim = intervalo_do_periodo(filtros.periodo)
+    sincronizar_votacoes(inicio, fim)
+
+    consulta = select(Votacao).where(Votacao.data.between(inicio, fim))
+    if filtros.status == "andamento":
+        consulta = consulta.where(Votacao.aprovada.is_(None))
+    elif filtros.status:
+        consulta = consulta.where(Votacao.aprovada.is_(STATUS_VOTACAO[filtros.status]))
+    consulta = consulta.order_by(Votacao.data.desc(), Votacao.horario.desc())
+
+    paginacao = db.paginate(consulta, page=filtros.pagina, per_page=filtros.por_pagina, error_out=False)
+    return {
+        "itens": [v.to_dict() for v in paginacao.items],
+        "pagina": paginacao.page,
+        "total_paginas": paginacao.pages,
+        "total": paginacao.total,
+    }
 
 
 def listar_parlamentares(filtros, usuario):

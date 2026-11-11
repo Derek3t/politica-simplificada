@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { deixarDeSeguir, listarParlamentares, listarSeguidos, seguirParlamentar } from '../api/legislation'
 import Icone from '../components/Icone.vue'
 import MensagemErro from '../components/MensagemErro.vue'
+import Paginacao from '../components/Paginacao.vue'
 import ParlamentarCard from '../components/ParlamentarCard.vue'
 import { useAuth } from '../composables/useAuth'
 
@@ -87,7 +88,7 @@ onUnmounted(() => clearTimeout(temporizador))
 
     <div class="mt-5 flex gap-2">
       <button
-        v-for="opcao in [{ id: 'todos', nome: 'Todos' }, { id: 'seguidos', nome: 'Seguindo' }]"
+        v-for="opcao in [{ id: 'todos', nome: 'Todos' }, { id: 'seguidos', nome: 'Seguidos' }]"
         :key="opcao.id"
         type="button"
         class="rounded-lg px-4 py-1.5 text-sm font-medium"
@@ -132,15 +133,7 @@ onUnmounted(() => clearTimeout(temporizador))
         />
       </ul>
 
-      <div v-if="totalPaginas > 1" class="mt-5 flex items-center justify-center gap-4 text-sm">
-        <button type="button" :disabled="pagina <= 1" class="rounded-lg bg-white px-3 py-1.5 disabled:opacity-40" @click="pagina--">
-          Anterior
-        </button>
-        <span class="text-slate-600">Página {{ pagina }} de {{ totalPaginas }}</span>
-        <button type="button" :disabled="pagina >= totalPaginas" class="rounded-lg bg-white px-3 py-1.5 disabled:opacity-40" @click="pagina++">
-          Próxima
-        </button>
-      </div>
+      <Paginacao :pagina="pagina" :total-paginas="totalPaginas" @mudar="pagina = $event" />
     </section>
   </div>
 </template>

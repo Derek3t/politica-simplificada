@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -16,5 +16,12 @@ class ParlamentaresQuery(BaseModel):
     busca: Optional[str] = Field(default=None, max_length=150)
     estado: Optional[str] = Field(default=None, min_length=2, max_length=2)
     partido: Optional[str] = Field(default=None, max_length=20)
+    pagina: int = Field(default=1, ge=1)
+    por_pagina: int = Field(default=20, ge=1, le=100)
+
+
+class VotacoesQuery(BaseModel):
+    periodo: Literal["hoje", "semana", "mes"] = "hoje"
+    status: Optional[Literal["aprovado", "rejeitado", "andamento"]] = None
     pagina: int = Field(default=1, ge=1)
     por_pagina: int = Field(default=20, ge=1, le=100)

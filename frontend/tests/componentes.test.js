@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import DayStrip from '../src/components/DayStrip.vue'
 import FormCampo from '../src/components/FormCampo.vue'
+import Paginacao from '../src/components/Paginacao.vue'
 import ParlamentarCard from '../src/components/ParlamentarCard.vue'
 
 describe('FormCampo', () => {
@@ -53,5 +54,26 @@ describe('ParlamentarCard', () => {
     const card = mount(ParlamentarCard, { props: { parlamentar: { ...parlamentar, seguido: true } } })
 
     expect(card.find('button').text()).toBe('Seguindo')
+  })
+})
+
+describe('Paginacao', () => {
+  it('não aparece com uma única página', () => {
+    const paginacao = mount(Paginacao, { props: { pagina: 1, totalPaginas: 1 } })
+
+    expect(paginacao.find('nav').exists()).toBe(false)
+  })
+
+  it('emite a página anterior e a próxima e bloqueia os extremos', async () => {
+    const paginacao = mount(Paginacao, { props: { pagina: 2, totalPaginas: 3 } })
+    const [anterior, proxima] = paginacao.findAll('button')
+
+    await anterior.trigger('click')
+    await proxima.trigger('click')
+
+    expect(paginacao.emitted('mudar')).toEqual([[1], [3]])
+
+    await paginacao.setProps({ pagina: 3 })
+    expect(paginacao.findAll('button')[1].attributes('disabled')).toBeDefined()
   })
 })
