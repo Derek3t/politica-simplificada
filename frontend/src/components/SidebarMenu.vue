@@ -9,6 +9,7 @@ const { usuario, logado, sair } = useAuth()
 const itens = [
   { nome: 'Início', rota: '/', icone: 'inicio' },
   { nome: 'Agenda', rota: '/agenda', icone: 'agenda' },
+  { nome: 'Calendário', rota: '/calendario', icone: 'calendario' },
   { nome: 'Votações', rota: '/votacoes', icone: 'votacoes' },
   { nome: 'Parlamentares', rota: '/parlamentares', icone: 'parlamentares' },
 ]

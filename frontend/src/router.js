@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from './composables/useAuth'
 import AgendaView from './views/AgendaView.vue'
 import BoasVindasView from './views/BoasVindasView.vue'
+import CalendarioView from './views/CalendarioView.vue'
 import LoginView from './views/LoginView.vue'
 import ParlamentaresView from './views/ParlamentaresView.vue'
 import VotacoesView from './views/VotacoesView.vue'
@@ -11,6 +12,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'inicio', component: BoasVindasView, meta: { semMenu: true } },
     { path: '/agenda', name: 'agenda', component: AgendaView },
+    { path: '/calendario', name: 'calendario', component: CalendarioView },
     { path: '/votacoes', name: 'votacoes', component: VotacoesView },
     { path: '/parlamentares', name: 'parlamentares', component: ParlamentaresView },
     { path: '/login', name: 'login', component: LoginView, meta: { semMenu: true, visitante: true } },

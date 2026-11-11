@@ -4,7 +4,7 @@ from politica.auth.decorators import login_required, usuario_atual
 from politica.extensions import db
 from politica.legislation import services
 from politica.legislation.models import DiaEspecial, Parlamentar, ProjetoLei
-from politica.legislation.schemas import AgendaQuery, ParlamentaresQuery, VotacoesQuery
+from politica.legislation.schemas import AgendaQuery, CalendarioQuery, ParlamentaresQuery, VotacoesQuery
 from politica.validacao import validar
 
 legislation_bp = Blueprint("legislation", __name__)
@@ -36,6 +36,12 @@ def analisar_projeto(usuario, projeto_id):
 def contextualizar_dia(usuario, dia_id):
     dia = db.get_or_404(DiaEspecial, dia_id)
     return jsonify(services.contextualizar_dia_especial(dia).to_dict())
+
+
+@legislation_bp.get("/calendario")
+def calendario():
+    filtros = validar(CalendarioQuery, request.args.to_dict())
+    return jsonify(services.montar_calendario(filtros.mes))
 
 
 @legislation_bp.get("/votacoes")

@@ -11,6 +11,7 @@ from politica.legislation.models import Parlamentar
 def app():
     app = create_app(TestingConfig)
     services.sincronizacoes_votacoes.clear()
+    services.cache_feriados.clear()
     with app.app_context():
         db.create_all()
         yield app

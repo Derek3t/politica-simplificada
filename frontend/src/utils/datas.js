@@ -34,3 +34,27 @@ export function formatarLonga(iso) {
 
 export const formatarDiaSemana = (iso) => formatoDiaSemana.format(paraData(iso)).replace('.', '')
 export const formatarDiaMes = (iso) => formatoDiaMes.format(paraData(iso)).replace('.', '')
+
+const formatoMes = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' })
+
+export const mesDe = (iso) => iso.slice(0, 7)
+
+export const ehMesValido = (mes) => /^\d{4}-(0[1-9]|1[0-2])$/.test(mes ?? '')
+
+export function somarMeses(mes, quantidade) {
+  const [ano, numero] = mes.split('-').map(Number)
+  return mesDe(paraISO(new Date(ano, numero - 1 + quantidade, 1)))
+}
+
+export function formatarMes(mes) {
+  const texto = formatoMes.format(paraData(`${mes}-01`))
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+}
+
+export function diasDoCalendario(mes) {
+  const [ano, numero] = mes.split('-').map(Number)
+  const vazios = new Date(ano, numero - 1, 1).getDay()
+  const total = new Date(ano, numero, 0).getDate()
+  const dias = Array.from({ length: total }, (_, i) => `${mes}-${String(i + 1).padStart(2, '0')}`)
+  return [...Array(vazios).fill(null), ...dias]
+}
