@@ -61,6 +61,7 @@ class ProjetoLei(db.Model):
     titulo: Mapped[str] = mapped_column(db.Text)
     orgao: Mapped[Optional[str]] = mapped_column(db.String(150))
     horario: Mapped[Optional[time]]
+    no_plenario: Mapped[bool] = mapped_column(default=False, server_default=db.false())
     resumo: Mapped[Optional[str]] = mapped_column(db.Text)
     analise_impacto: Mapped[Optional[str]] = mapped_column(db.Text)
     comparacao_internacional: Mapped[Optional[str]] = mapped_column(db.Text)
@@ -80,6 +81,7 @@ class ProjetoLei(db.Model):
             "titulo": self.titulo,
             "orgao": self.orgao,
             "horario": self.horario.strftime("%H:%M") if self.horario else None,
+            "no_plenario": self.no_plenario,
             "status": self.status,
             "data_votacao": self.data_votacao.isoformat() if self.data_votacao else None,
             "resumo": self.resumo,

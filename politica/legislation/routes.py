@@ -14,7 +14,7 @@ legislation_bp = Blueprint("legislation", __name__)
 def agenda_do_dia():
     filtros = validar(AgendaQuery, request.args.to_dict())
     agenda = services.obter_ou_criar_agenda(filtros.data)
-    return jsonify(services.montar_agenda(agenda, usuario_atual(), filtros.apenas_seguidos))
+    return jsonify(services.montar_agenda(agenda, usuario_atual(), filtros.apenas_seguidos, filtros.incluir_comissoes))
 
 
 @legislation_bp.get("/projetos/<int:projeto_id>")

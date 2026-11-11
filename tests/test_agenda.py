@@ -57,12 +57,19 @@ def test_agenda_rejeita_data_invalida(client):
 
 
 def test_agenda_monta_projetos_e_dias_especiais(client, camara):
-    corpo = client.get(f"/api/legislation/agenda?data={DATA}").json
+    corpo = client.get(f"/api/legislation/agenda?data={DATA}&incluir_comissoes=true").json
 
     assert [p["codigo_pl"] for p in corpo["projetos_lei"]] == ["PL 479/2025", "PEC 5/2026"]
     assert corpo["projetos_lei"][0]["horario"] == "09:00"
     assert corpo["projetos_lei"][0]["orgao"] == "Plenário"
     assert [d["nome"] for d in corpo["dias_especiais"]] == ["Dia Teste"]
+
+
+def test_agenda_mostra_so_plenario_por_padrao(client, camara):
+    corpo = client.get(f"/api/legislation/agenda?data={DATA}").json
+
+    assert {p["orgao"] for p in corpo["projetos_lei"]} == {"Plenário"}
+    assert all(p["no_plenario"] for p in corpo["projetos_lei"])
 
 
 def test_agenda_ignora_eventos_nao_deliberativos_e_cancelados(client, camara):
