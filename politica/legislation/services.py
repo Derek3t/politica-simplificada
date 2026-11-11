@@ -80,7 +80,7 @@ def carregar_pauta(agenda):
 
     existentes = {p.id_original for p in agenda.projetos_lei}
     novos, do_plenario = [], []
-    for evento, itens in zip(eventos, pautas):
+    for evento, itens in zip(eventos, pautas, strict=True):
         no_plenario = (evento.get("orgaos") or [{}])[0].get("sigla") == SIGLA_PLENARIO
         for item in itens:
             proposicao = item.get("proposicaoRelacionada_") or item.get("proposicao_")
@@ -114,6 +114,9 @@ def obter_ou_criar_agenda(data: date) -> Agenda:
     except ErroServicoExterno:
         db.session.rollback()
         raise
+    except IntegrityError:
+        db.session.rollback()
+        return db.session.scalar(select(Agenda).where(Agenda.data == data))
     return agenda
 
 
@@ -208,7 +211,9 @@ def sincronizar_votacoes(inicio, fim):
         logger.warning("Câmara indisponível, exibindo votações já salvas de %s a %s", inicio, fim)
         return
 
-    existentes = {v.id_original: v for v in db.session.scalars(select(Votacao).where(Votacao.data.between(inicio, fim)))}
+    existentes = {
+        v.id_original: v for v in db.session.scalars(select(Votacao).where(Votacao.data.between(inicio, fim)))
+    }
     for dados in recebidas:
         if not eh_votacao_de_projeto(dados):
             continue

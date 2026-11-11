@@ -4,7 +4,7 @@ import os
 from flask import Flask
 
 from .cli import registrar_comandos
-from .config import CONFIGURACOES
+from .config import CHAVE_PADRAO, CONFIGURACOES
 from .errors import registrar_handlers
 from .extensions import cors, db, migrate
 
@@ -19,6 +19,9 @@ def configurar_logging(app):
 def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object(config_class or CONFIGURACOES[os.getenv("APP_ENV", "development")])
+
+    if app.config["SECRET_KEY"] == CHAVE_PADRAO and not (app.debug or app.testing):
+        raise RuntimeError("Defina SECRET_KEY no ambiente antes de rodar fora do modo de desenvolvimento.")
 
     configurar_logging(app)
 

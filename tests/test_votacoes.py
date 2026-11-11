@@ -30,9 +30,16 @@ def camara(monkeypatch):
         votacao("1-3", "PLP 3/2026", None, hora="17:00:00"),
         votacao("1-4", "REQ 99/2026", 1),
         votacao("1-5", None, 1, descricao="Aprovada a Redação Final."),
-        votacao("1-9", "PL 40/2026", 1, descricao="Aprovado o requerimento nº 1/2026 que solicita urgência para o PL 40/2026."),
+        votacao(
+            "1-9",
+            "PL 40/2026",
+            1,
+            descricao="Aprovado o requerimento nº 1/2026 que solicita urgência para o PL 40/2026.",
+        ),
         votacao("1-10", "PL 41/2026", 1, descricao="Alteração do Regime de Tramitação desta proposição."),
-        votacao("1-8", None, 1, hora="18:00:00", descricao="Aprovado o Substitutivo ao Projeto de Lei nº 464, de 2026."),
+        votacao(
+            "1-8", None, 1, hora="18:00:00", descricao="Aprovado o Substitutivo ao Projeto de Lei nº 464, de 2026."
+        ),
         votacao("1-6", "PL 20/2026", 1, dias_atras=3),
         votacao("1-7", "PL 30/2026", 1, dias_atras=15),
     ]

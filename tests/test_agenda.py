@@ -1,15 +1,23 @@
 from datetime import date, timedelta
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from politica.errors import ErroServicoExterno
+from politica.extensions import db
 from politica.legislation import integracoes
 from politica.legislation.models import Agenda, ProjetoLei
 
 DATA = "2026-11-11"
 
 EVENTOS = [
-    {"id": 1, "descricaoTipo": "Sessão Deliberativa", "situacao": "Convocada", "dataHoraInicio": "2026-11-11T09:00", "orgaos": [{"nome": "Plenário", "sigla": "PLEN"}]},
+    {
+        "id": 1,
+        "descricaoTipo": "Sessão Deliberativa",
+        "situacao": "Convocada",
+        "dataHoraInicio": "2026-11-11T09:00",
+        "orgaos": [{"nome": "Plenário", "sigla": "PLEN"}],
+    },
     {"id": 2, "descricaoTipo": "Audiência Pública", "situacao": "Convocada", "orgaos": [{"nome": "CCJ"}]},
     {"id": 3, "descricaoTipo": "Reunião Deliberativa", "situacao": "Cancelada", "orgaos": [{"nome": "CFT"}]},
 ]
@@ -18,10 +26,22 @@ PAUTA = [
     {
         "titulo": "REQ 10/2026",
         "proposicao_": {"id": 11, "siglaTipo": "REQ", "numero": 10, "ano": 2026, "ementa": "Requer urgência."},
-        "proposicaoRelacionada_": {"id": 22, "siglaTipo": "PL", "numero": "479", "ano": "2025", "ementa": "Define TDAH."},
+        "proposicaoRelacionada_": {
+            "id": 22,
+            "siglaTipo": "PL",
+            "numero": "479",
+            "ano": "2025",
+            "ementa": "Define TDAH.",
+        },
     },
-    {"titulo": "PEC 5/2026", "proposicao_": {"id": 33, "siglaTipo": "PEC", "numero": 5, "ano": 2026, "ementa": "Altera a Constituição."}},
-    {"titulo": "TVR 9/2026", "proposicao_": {"id": 44, "siglaTipo": "TVR", "numero": 9, "ano": 2026, "ementa": "Concessão de rádio."}},
+    {
+        "titulo": "PEC 5/2026",
+        "proposicao_": {"id": 33, "siglaTipo": "PEC", "numero": 5, "ano": 2026, "ementa": "Altera a Constituição."},
+    },
+    {
+        "titulo": "TVR 9/2026",
+        "proposicao_": {"id": 44, "siglaTipo": "TVR", "numero": 9, "ano": 2026, "ementa": "Concessão de rádio."},
+    },
     {"titulo": "sem proposicao"},
 ]
 
@@ -149,7 +169,9 @@ def test_autores_so_sao_vinculados_a_projetos_do_plenario(client, camara, monkey
         return {i: [100] for i in ids}
 
     monkeypatch.setattr(integracoes, "autores_das_proposicoes", autores)
-    monkeypatch.setattr(integracoes, "eventos_do_dia", lambda data: [{**EVENTOS[0], "orgaos": [{"nome": "CCJ", "sigla": "CCJC"}]}])
+    monkeypatch.setattr(
+        integracoes, "eventos_do_dia", lambda data: [{**EVENTOS[0], "orgaos": [{"nome": "CCJ", "sigla": "CCJC"}]}]
+    )
 
     client.get(f"/api/legislation/agenda?data={DATA}")
 
@@ -168,3 +190,24 @@ def test_detalhe_do_projeto_lista_autores(client, camara, parlamentar):
 
 def test_detalhe_de_projeto_inexistente_retorna_404(client):
     assert client.get("/api/legislation/projetos/999").status_code == 404
+
+
+def test_agenda_criada_ao_mesmo_tempo_por_outra_requisicao_nao_gera_erro(client, camara, monkeypatch):
+    original = db.session.commit
+    corrida = {"pendente": True}
+
+    def commit_com_corrida():
+        if corrida["pendente"]:
+            corrida["pendente"] = False
+            db.session.rollback()
+            db.session.add(Agenda(data=date.fromisoformat(DATA)))
+            original()
+            raise IntegrityError("INSERT", {}, Exception("UNIQUE constraint failed: agenda.data"))
+        return original()
+
+    monkeypatch.setattr(db.session, "commit", commit_com_corrida)
+
+    resposta = client.get(f"/api/legislation/agenda?data={DATA}")
+
+    assert resposta.status_code == 200
+    assert Agenda.query.count() == 1

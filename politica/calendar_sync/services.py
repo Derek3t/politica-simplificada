@@ -2,9 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 
 def escapar(texto):
-    return (
-        texto.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\r", "").replace("\n", "\\n")
-    )
+    return texto.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\r", "").replace("\n", "\\n")
 
 
 def gerar_ics(projeto):

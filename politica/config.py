@@ -5,8 +5,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+CHAVE_PADRAO = "troque-esta-chave"
+
+
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "troque-esta-chave")
+    SECRET_KEY = os.getenv("SECRET_KEY", CHAVE_PADRAO)
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///politica.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SESSION_COOKIE_HTTPONLY = True

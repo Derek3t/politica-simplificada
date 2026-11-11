@@ -4,10 +4,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from flask import current_app
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from google import genai
 from google.genai import errors as genai_errors
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from politica.errors import ErroApi, ErroServicoExterno
 
@@ -19,7 +19,8 @@ MAX_PAGINAS_VOTACOES = 6
 CAMPOS_ANALISE = ("resumo", "analise_impacto", "comparacao_internacional")
 CAMPOS_DIA_ESPECIAL = ("contexto_historico", "importancia", "impacto_legislativo")
 
-PROMPT_ANALISE = """Você é um cientista político e educador cívico que traduz o Congresso Brasileiro para cidadãos comuns.
+PROMPT_ANALISE = """Você é um cientista político e educador cívico que traduz o Congresso Brasileiro
+para cidadãos comuns.
 Analise a proposição abaixo e responda apenas com um JSON contendo as chaves:
 "resumo": o que significa, em linguagem simples e no máximo 3 frases;
 "analise_impacto": como isso muda o dia a dia do cidadão;
@@ -123,7 +124,7 @@ def autores_das_proposicoes(ids_proposicoes):
         return [int(a["uri"].rsplit("/", 1)[-1]) for a in autores if "/deputados/" in a.get("uri", "")]
 
     with ThreadPoolExecutor(max_workers=8) as pool:
-        return dict(zip(ids_proposicoes, pool.map(buscar, ids_proposicoes)))
+        return dict(zip(ids_proposicoes, pool.map(buscar, ids_proposicoes), strict=True))
 
 
 def feriados_do_ano(ano):
