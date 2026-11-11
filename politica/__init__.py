@@ -4,7 +4,7 @@ from .config import Config
 from .ext.db import db, init_app as init_db
 from politica.auth import init_app as init_auth
 from politica.legislation import init_app as init_legislation
-from calendar_sync import init_app as init_calendar
+from politica.calendar_sync import init_app as init_calendar
 
 migrate = Migrate()
 

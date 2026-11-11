@@ -11,10 +11,17 @@ class UsuarioParlamentar(db.Model):
     __tablename__ = "usuario_parlamentar"
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    usuario_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
-    parlamentar_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey("parlamentar.id"), nullable=False)
+    usuario_id: Mapped[int] = mapped_column(
+        db.Integer, 
+        db.ForeignKey("usuarios.id", ondelete="CASCADE"), 
+        nullable=False
+    )
+    parlamentar_id: Mapped[int] = mapped_column(
+        db.Integer, 
+        db.ForeignKey("parlamentar.id", ondelete="CASCADE"), 
+        nullable=False
+    )
 
-    # Relações bidirecionais apontando para as pontas
     usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="parlamentares_seguidos")
     parlamentar: Mapped["Parlamentar"] = relationship("Parlamentar", back_populates="seguidores")
 

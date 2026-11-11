@@ -1,8 +1,8 @@
 from datetime import datetime, date
 import requests
 from politica.ext.db import db
-from politica.auth.models import Usuario
-from politica.legislation.models import Parlamentar, UsuarioParlamentar, Agenda, ProjetoLei, DiaEspecial
+from politica.auth.models import Usuario, UsuarioParlamentar
+from politica.legislation.models import Parlamentar, Agenda, ProjetoLei, DiaEspecial
 from google import genai
 from flask import current_app
 
