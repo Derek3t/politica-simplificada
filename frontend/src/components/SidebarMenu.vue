@@ -9,6 +9,7 @@ const { usuario, logado, sair } = useAuth()
 const itens = [
   { nome: 'Início', rota: '/', icone: 'inicio' },
   { nome: 'Agenda', rota: '/agenda', icone: 'agenda' },
+  { nome: 'Votações', rota: '/votacoes', icone: 'votacoes' },
   { nome: 'Parlamentares', rota: '/parlamentares', icone: 'parlamentares' },
 ]
 
@@ -19,7 +20,7 @@ async function aoSair() {
 </script>
 
 <template>
-  <aside class="hidden w-64 shrink-0 flex-col bg-marinho p-5 text-white md:flex">
+  <aside class="hidden w-64 shrink-0 flex-col bg-marinho p-5 text-white md:sticky md:top-0 md:flex md:h-screen">
     <RouterLink to="/" class="flex items-center gap-3">
       <Icone nome="marca" :tamanho="32" />
       <span class="text-lg font-semibold leading-tight">Política<br />Simplificada</span>

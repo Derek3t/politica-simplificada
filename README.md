@@ -67,7 +67,15 @@ tests/                pytest
 | GET | `/api/legislation/projetos/<id>` | opcional |
 | POST | `/api/legislation/projetos/<id>/analisar` | sim |
 | POST | `/api/legislation/dias-especiais/<id>/contextualizar` | sim |
+| GET | `/api/legislation/votacoes?periodo=hoje\|semana\|mes&status=aprovado\|rejeitado\|andamento&pagina=` | |
 | GET | `/api/legislation/parlamentares?busca=&estado=&partido=&pagina=&por_pagina=` | opcional |
 | GET | `/api/legislation/parlamentares/seguidos` | sim |
 | POST, DELETE | `/api/legislation/parlamentares/<id>/seguir` | sim |
 | GET | `/api/calendar/projetos/<id>.ics` | sim |
+
+## Limitações conhecidas
+
+- Apenas a Câmara dos Deputados é consultada. Sessões do Congresso Nacional e o Senado não estão incluídos.
+- Votações só entram se forem de mérito (projetos, PECs, MPs). Requerimentos e mudanças de regime de tramitação são ignorados.
+- A autoria de projetos só é vinculada aos parlamentares para pautas do Plenário.
+- Votações ficam em cache por 10 minutos. Se a API da Câmara estiver fora, são exibidos os dados já salvos.

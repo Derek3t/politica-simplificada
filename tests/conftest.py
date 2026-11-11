@@ -3,12 +3,14 @@ import pytest
 from politica import create_app
 from politica.config import TestingConfig
 from politica.extensions import db
+from politica.legislation import services
 from politica.legislation.models import Parlamentar
 
 
 @pytest.fixture
 def app():
     app = create_app(TestingConfig)
+    services.sincronizacoes_votacoes.clear()
     with app.app_context():
         db.create_all()
         yield app

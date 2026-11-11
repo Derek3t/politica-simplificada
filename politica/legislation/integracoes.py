@@ -13,6 +13,9 @@ from politica.errors import ErroApi, ErroServicoExterno
 
 logger = logging.getLogger(__name__)
 
+ID_ORGAO_PLENARIO = 180
+MAX_PAGINAS_VOTACOES = 6
+
 CAMPOS_ANALISE = ("resumo", "analise_impacto", "comparacao_internacional")
 CAMPOS_DIA_ESPECIAL = ("contexto_historico", "importancia", "impacto_legislativo")
 
@@ -74,6 +77,25 @@ def eventos_do_dia(data):
         ordem="ASC",
         ordenarPor="dataHoraInicio",
     )
+
+
+def votacoes_do_periodo(inicio, fim):
+    votacoes = []
+    for pagina in range(1, MAX_PAGINAS_VOTACOES + 1):
+        lote = _camara(
+            "/votacoes",
+            dataInicio=inicio.isoformat(),
+            dataFim=fim.isoformat(),
+            idOrgao=ID_ORGAO_PLENARIO,
+            itens=100,
+            pagina=pagina,
+            ordem="DESC",
+            ordenarPor="dataHoraRegistro",
+        )
+        votacoes.extend(lote)
+        if len(lote) < 100:
+            break
+    return votacoes
 
 
 def pautas_dos_eventos(ids_eventos):

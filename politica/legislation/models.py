@@ -94,6 +94,38 @@ class ProjetoLei(db.Model):
         return f"<ProjetoLei id={self.id} codigo_pl='{self.codigo_pl}'>"
 
 
+class Votacao(db.Model):
+    __tablename__ = "votacoes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    id_original: Mapped[str] = mapped_column(db.String(50), unique=True)
+    data: Mapped[date] = mapped_column(index=True)
+    horario: Mapped[Optional[time]]
+    objeto: Mapped[Optional[str]] = mapped_column(db.String(50))
+    descricao: Mapped[str] = mapped_column(db.Text)
+    aprovada: Mapped[Optional[bool]]
+
+    @property
+    def status(self):
+        if self.aprovada is None:
+            return "Em andamento"
+        return "Aprovado" if self.aprovada else "Rejeitado"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "data": self.data.isoformat(),
+            "horario": self.horario.strftime("%H:%M") if self.horario else None,
+            "objeto": self.objeto,
+            "descricao": self.descricao,
+            "status": self.status,
+            "casa": "Câmara dos Deputados",
+        }
+
+    def __repr__(self):
+        return f"<Votacao id={self.id} objeto='{self.objeto}'>"
+
+
 class Parlamentar(db.Model):
     __tablename__ = "parlamentar"
 

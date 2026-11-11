@@ -15,6 +15,8 @@ export const obterProjeto = (id) => get(`${BASE}/projetos/${id}`)
 export const analisarProjeto = (id) => post(`${BASE}/projetos/${id}/analisar`)
 export const contextualizarDia = (id) => post(`${BASE}/dias-especiais/${id}/contextualizar`)
 
+export const listarVotacoes = (filtros) => get(comParametros(`${BASE}/votacoes`, filtros))
+
 export const listarParlamentares = (filtros) => get(comParametros(`${BASE}/parlamentares`, filtros))
 export const listarSeguidos = () => get(`${BASE}/parlamentares/seguidos`)
 export const seguirParlamentar = (id) => post(`${BASE}/parlamentares/${id}/seguir`)
