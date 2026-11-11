@@ -2,7 +2,7 @@
 
 Plataforma que traduz a agenda do Congresso Brasileiro para linguagem simples: votações e projetos de lei do dia, feriados e datas cívicas, perfil de parlamentares e resumos gerados por IA.
 
-Backend em Flask (API JSON) e frontend em Vue.js.
+Backend em Flask (API JSON) e frontend em Vue.js (Vite + Tailwind).
 
 ## Backend
 
@@ -13,22 +13,34 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env
-flask --app app db upgrade
-flask --app app importar-parlamentares
-flask --app app run
+flask db upgrade
+flask importar-parlamentares
+flask run
 ```
 
-A API sobe em `http://localhost:5000/api`. Sem `GEMINI_API_KEY` no `.env` as rotas de análise com IA respondem 503; o resto funciona normalmente.
+A API sobe em `http://localhost:5001/api`. A porta 5000 não é usada porque o AirPlay Receiver do macOS a ocupa; ela está definida em `.flaskenv`. Sem `GEMINI_API_KEY` no `.env` as rotas de análise com IA respondem 503; o resto funciona normalmente.
 
-### Comandos
+### Comandos do backend
 
 | Comando | O que faz |
 |---|---|
-| `flask --app app importar-parlamentares` | Importa os deputados da API da Câmara |
-| `flask --app app sincronizar-agenda AAAA-MM-DD` | Pré-carrega a agenda de um dia (padrão: hoje) |
+| `flask importar-parlamentares` | Importa os deputados da API da Câmara |
+| `flask sincronizar-agenda AAAA-MM-DD` | Pré-carrega a agenda de um dia (padrão: hoje) |
 | `pytest` | Roda os testes automatizados |
 
-### Estrutura
+## Frontend
+
+Requer Node 20+. Com o backend rodando:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Acesse `http://localhost:5173`. O Vite encaminha `/api` para o Flask. Testes: `npm test`.
+
+### Estrutura do backend
 
 ```
 politica/
