@@ -6,7 +6,9 @@ from politica.legislation.models import Agenda, ProjetoLei
 
 def criar_projeto():
     agenda = Agenda(data=date(2026, 11, 11))
-    agenda.projetos_lei.append(ProjetoLei(codigo_pl="PL 1/2026", titulo="Ementa; com, pontuação", resumo="Linha 1\nLinha 2"))
+    agenda.projetos_lei.append(
+        ProjetoLei(codigo_pl="PL 1/2026", titulo="Ementa; com, pontuação", resumo="Linha 1\nLinha 2")
+    )
     db.session.add(agenda)
     db.session.commit()
     return agenda.projetos_lei[0]

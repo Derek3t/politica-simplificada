@@ -1,10 +1,13 @@
 from datetime import datetime
-from typing import List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from politica.extensions import db
+
+if TYPE_CHECKING:
+    from politica.legislation.models import Parlamentar
 
 
 class Usuario(db.Model):
@@ -16,7 +19,7 @@ class Usuario(db.Model):
     senha_hash: Mapped[str] = mapped_column(db.String(255))
     created_at: Mapped[datetime] = mapped_column(server_default=db.func.now())
 
-    parlamentares_seguidos: Mapped[List["UsuarioParlamentar"]] = relationship(
+    parlamentares_seguidos: Mapped[list["UsuarioParlamentar"]] = relationship(
         back_populates="usuario", cascade="all, delete-orphan", passive_deletes=True
     )
 

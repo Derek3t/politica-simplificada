@@ -18,7 +18,7 @@ flask importar-parlamentares
 flask run
 ```
 
-A API sobe em `http://localhost:5001/api`. A porta 5000 não é usada porque o AirPlay Receiver do macOS a ocupa; ela está definida em `.flaskenv`. Sem `GEMINI_API_KEY` no `.env` as rotas de análise com IA respondem 503; o resto funciona normalmente.
+A API sobe em `http://localhost:5001/api`. A porta 5000 não é usada porque o AirPlay Receiver do macOS a ocupa; ela está definida em `.flaskenv`. Em produção (`APP_ENV=production`) o app se recusa a subir sem uma `SECRET_KEY` própria. Sem `GEMINI_API_KEY` no `.env` as rotas de análise com IA respondem 503; o resto funciona normalmente.
 
 ### Comandos do backend
 
@@ -27,6 +27,7 @@ A API sobe em `http://localhost:5001/api`. A porta 5000 não é usada porque o A
 | `flask importar-parlamentares` | Importa os deputados da API da Câmara |
 | `flask sincronizar-agenda AAAA-MM-DD` | Pré-carrega a agenda de um dia (padrão: hoje) |
 | `pytest` | Roda os testes automatizados |
+| `ruff check . && ruff format --check .` | Verifica lint e formatação |
 
 ## Frontend
 

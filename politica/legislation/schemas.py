@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -13,15 +13,15 @@ class AgendaQuery(BaseModel):
 class ParlamentaresQuery(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    busca: Optional[str] = Field(default=None, max_length=150)
-    estado: Optional[str] = Field(default=None, min_length=2, max_length=2)
-    partido: Optional[str] = Field(default=None, max_length=20)
+    busca: str | None = Field(default=None, max_length=150)
+    estado: str | None = Field(default=None, min_length=2, max_length=2)
+    partido: str | None = Field(default=None, max_length=20)
     pagina: int = Field(default=1, ge=1)
     por_pagina: int = Field(default=20, ge=1, le=100)
 
 
 class VotacoesQuery(BaseModel):
     periodo: Literal["hoje", "semana", "mes"] = "hoje"
-    status: Optional[Literal["aprovado", "rejeitado", "andamento"]] = None
+    status: Literal["aprovado", "rejeitado", "andamento"] | None = None
     pagina: int = Field(default=1, ge=1)
     por_pagina: int = Field(default=20, ge=1, le=100)
