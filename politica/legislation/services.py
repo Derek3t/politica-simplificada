@@ -53,7 +53,7 @@ def vincular_autores(projetos):
                 projeto.historicos.append(Historico(parlamentar_id=mapa[id_deputado], posicionamento="Autor"))
 
 
-def criar_projeto(proposicao, item, evento, data):
+def criar_projeto(proposicao, item, evento, data, no_plenario):
     sigla = proposicao.get("siglaTipo")
     return ProjetoLei(
         id_original=str(proposicao["id"]),
@@ -62,6 +62,7 @@ def criar_projeto(proposicao, item, evento, data):
         titulo=proposicao.get("ementa") or item.get("topico") or "Sem ementa",
         orgao=(evento.get("orgaos") or [{}])[0].get("nome"),
         horario=horario_do_evento(evento),
+        no_plenario=no_plenario,
         status=item.get("situacaoItem") or "Em pauta",
         data_votacao=data,
     )
@@ -82,7 +83,7 @@ def carregar_pauta(agenda):
             if str(proposicao["id"]) in existentes:
                 continue
             existentes.add(str(proposicao["id"]))
-            projeto = criar_projeto(proposicao, item, evento, agenda.data)
+            projeto = criar_projeto(proposicao, item, evento, agenda.data, no_plenario)
             novos.append(projeto)
             if no_plenario:
                 do_plenario.append(projeto)
@@ -116,10 +117,12 @@ def ids_seguidos(usuario):
     return {s.parlamentar_id for s in usuario.parlamentares_seguidos}
 
 
-def montar_agenda(agenda, usuario, apenas_seguidos=False):
+def montar_agenda(agenda, usuario, apenas_seguidos=False, incluir_comissoes=False):
     seguidos = ids_seguidos(usuario)
     projetos = []
     for projeto in agenda.projetos_lei:
+        if not incluir_comissoes and not projeto.no_plenario:
+            continue
         destacado = any(h.parlamentar_id in seguidos for h in projeto.historicos)
         if apenas_seguidos and not destacado:
             continue

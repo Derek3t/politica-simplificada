@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class AgendaQuery(BaseModel):
     data: date
     apenas_seguidos: bool = False
+    incluir_comissoes: bool = False
 
 
 class ParlamentaresQuery(BaseModel):
