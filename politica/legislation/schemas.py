@@ -20,6 +20,10 @@ class ParlamentaresQuery(BaseModel):
     por_pagina: int = Field(default=20, ge=1, le=100)
 
 
+class CalendarioQuery(BaseModel):
+    mes: str = Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
+
+
 class VotacoesQuery(BaseModel):
     periodo: Literal["hoje", "semana", "mes"] = "hoje"
     status: Literal["aprovado", "rejeitado", "andamento"] | None = None

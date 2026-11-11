@@ -1,7 +1,9 @@
+import calendar
 import logging
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from politica.auth.models import UsuarioParlamentar
@@ -19,6 +21,7 @@ TERMOS_DE_PROJETO = ("projeto de lei", "proposta de emenda", "medida provisória
 TERMOS_PROCEDIMENTAIS = ("requerimento", "regime de tramitação")
 STATUS_VOTACAO = {"aprovado": True, "rejeitado": False}
 sincronizacoes_votacoes = {}
+cache_feriados = {}
 TIPOS_RELEVANTES = {"PL", "PLP", "PEC", "PDL", "MPV", "PLN", "PLV"}
 
 
@@ -28,9 +31,15 @@ def eh_deliberativo(evento):
     return "deliberativ" in tipo and "não deliberativ" not in tipo and not cancelado
 
 
+def feriados_do_ano(ano):
+    if ano not in cache_feriados:
+        cache_feriados[ano] = integracoes.feriados_do_ano(ano)
+    return cache_feriados[ano]
+
+
 def carregar_feriados(agenda):
     try:
-        feriados = integracoes.feriados_do_ano(agenda.data.year)
+        feriados = feriados_do_ano(agenda.data.year)
     except ErroServicoExterno:
         return
     for feriado in feriados:
@@ -224,6 +233,43 @@ def sincronizar_votacoes(inicio, fim):
         atualizar_votacao(votacao, dados)
     db.session.commit()
     sincronizacoes_votacoes[(inicio, fim)] = datetime.now()
+
+
+def montar_calendario(mes):
+    ano, numero = (int(parte) for parte in mes.split("-"))
+    inicio = date(ano, numero, 1)
+    fim = date(ano, numero, calendar.monthrange(ano, numero)[1])
+    dias = defaultdict(lambda: {"feriados": [], "votacoes": 0, "projetos": 0})
+
+    try:
+        for feriado in feriados_do_ano(ano):
+            if feriado["date"].startswith(mes):
+                dias[feriado["date"]]["feriados"].append(feriado["name"])
+    except ErroServicoExterno:
+        logger.warning("Feriados de %s indisponíveis para o calendário", ano)
+
+    if inicio <= date.today():
+        try:
+            sincronizar_votacoes(inicio, min(fim, date.today()))
+        except ErroServicoExterno:
+            logger.warning("Votações de %s indisponíveis para o calendário", mes)
+
+    votacoes = db.session.execute(
+        select(Votacao.data, func.count()).where(Votacao.data.between(inicio, fim)).group_by(Votacao.data)
+    )
+    for dia, quantidade in votacoes:
+        dias[dia.isoformat()]["votacoes"] = quantidade
+
+    projetos = db.session.execute(
+        select(Agenda.data, func.count(ProjetoLei.id))
+        .join(ProjetoLei, ProjetoLei.agenda_id == Agenda.id)
+        .where(Agenda.data.between(inicio, fim), ProjetoLei.no_plenario.is_(True))
+        .group_by(Agenda.data)
+    )
+    for dia, quantidade in projetos:
+        dias[dia.isoformat()]["projetos"] = quantidade
+
+    return {"mes": mes, "dias": dict(sorted(dias.items()))}
 
 
 def listar_votacoes(filtros):

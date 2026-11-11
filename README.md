@@ -68,6 +68,7 @@ tests/                pytest
 | GET | `/api/legislation/projetos/<id>` | opcional |
 | POST | `/api/legislation/projetos/<id>/analisar` | sim |
 | POST | `/api/legislation/dias-especiais/<id>/contextualizar` | sim |
+| GET | `/api/legislation/calendario?mes=AAAA-MM` | |
 | GET | `/api/legislation/votacoes?periodo=hoje\|semana\|mes&status=aprovado\|rejeitado\|andamento&pagina=` | |
 | GET | `/api/legislation/parlamentares?busca=&estado=&partido=&pagina=&por_pagina=` | opcional |
 | GET | `/api/legislation/parlamentares/seguidos` | sim |

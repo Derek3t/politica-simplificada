@@ -7,6 +7,7 @@ MENSAGENS = {
     "string_too_short": "Deve ter no mínimo {min_length} caracteres.",
     "string_too_long": "Deve ter no máximo {max_length} caracteres.",
     "value_error": "E-mail inválido.",
+    "string_pattern_mismatch": "Use o formato AAAA-MM.",
     "literal_error": "Valor não permitido.",
     "date_parsing": "Data inválida, use AAAA-MM-DD.",
     "date_from_datetime_parsing": "Data inválida, use AAAA-MM-DD.",

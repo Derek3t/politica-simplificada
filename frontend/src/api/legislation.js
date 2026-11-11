@@ -11,6 +11,8 @@ export const obterAgenda = (data, { incluirComissoes, apenasSeguidos }) =>
     }),
   )
 
+export const obterCalendario = (mes) => get(comParametros(`${BASE}/calendario`, { mes }))
+
 export const obterProjeto = (id) => get(`${BASE}/projetos/${id}`)
 export const analisarProjeto = (id) => post(`${BASE}/projetos/${id}/analisar`)
 export const contextualizarDia = (id) => post(`${BASE}/dias-especiais/${id}/contextualizar`)
