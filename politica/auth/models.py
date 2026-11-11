@@ -1,47 +1,39 @@
 from datetime import datetime
-from typing import List, TYPE_CHECKING
+from typing import List
+
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from politica.ext.db import db
 
-if TYPE_CHECKING:
-    from politica.legislation.models import Parlamentar
+from politica.extensions import db
 
-
-class UsuarioParlamentar(db.Model):
-    __tablename__ = "usuario_parlamentar"
-
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    usuario_id: Mapped[int] = mapped_column(
-        db.Integer, 
-        db.ForeignKey("usuarios.id", ondelete="CASCADE"), 
-        nullable=False
-    )
-    parlamentar_id: Mapped[int] = mapped_column(
-        db.Integer, 
-        db.ForeignKey("parlamentar.id", ondelete="CASCADE"), 
-        nullable=False
-    )
-
-    usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="parlamentares_seguidos")
-    parlamentar: Mapped["Parlamentar"] = relationship("Parlamentar", back_populates="seguidores")
 
 class Usuario(db.Model):
     __tablename__ = "usuarios"
 
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    google_id: Mapped[str] = mapped_column(db.String(255), unique=True, nullable=False)
-    email: Mapped[str] = mapped_column(db.String(255), unique=True, nullable=False, index=True)
-    name: Mapped[str] = mapped_column(db.String(150), nullable=False)
-    access_token: Mapped[str] = mapped_column(db.Text, nullable=False)
-    refresh_token: Mapped[str] = mapped_column(db.Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False, server_default=db.func.now())
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(db.String(150))
+    email: Mapped[str] = mapped_column(db.String(255), unique=True, index=True)
+    senha_hash: Mapped[str] = mapped_column(db.String(255))
+    created_at: Mapped[datetime] = mapped_column(server_default=db.func.now())
 
-    # Aqui é uma lista da CLASSE intermediária (porque guardamos dados da relação)
     parlamentares_seguidos: Mapped[List["UsuarioParlamentar"]] = relationship(
-        "UsuarioParlamentar", 
-        back_populates="usuario", 
-        cascade="all, delete-orphan"
+        back_populates="usuario", cascade="all, delete-orphan", passive_deletes=True
     )
 
-    def __repr__(self) -> str:
+    def to_dict(self):
+        return {"id": self.id, "nome": self.nome, "email": self.email}
+
+    def __repr__(self):
         return f"<Usuario id={self.id} email='{self.email}'>"
+
+
+class UsuarioParlamentar(db.Model):
+    __tablename__ = "usuario_parlamentar"
+    __table_args__ = (UniqueConstraint("usuario_id", "parlamentar_id", name="uq_usuario_parlamentar"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(db.ForeignKey("usuarios.id", ondelete="CASCADE"))
+    parlamentar_id: Mapped[int] = mapped_column(db.ForeignKey("parlamentar.id", ondelete="CASCADE"))
+
+    usuario: Mapped["Usuario"] = relationship(back_populates="parlamentares_seguidos")
+    parlamentar: Mapped["Parlamentar"] = relationship(back_populates="seguidores")

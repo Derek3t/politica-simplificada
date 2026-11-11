@@ -1,27 +1,32 @@
-from politica.ext.db import db
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from politica.auth.models import Usuario
-from politica.legislation.models import Agenda, ProjetoLei, Historico
+from politica.errors import ErroApi
+from politica.extensions import db
 
-def autenticar_usuario(data):
-    usuario = Usuario.query.filter_by(
-        email=data.get("email")
-    ).first()
 
-    if not usuario:
-        usuario = Usuario(
-            google_id=data["google_id"],
-            email=data["email"],
-            name=data["name"],
-            access_token=data["access_token"],
-            refresh_token=data.get("refresh_token")
-        )
-        db.session.add(usuario)
-    else:
-        usuario.access_token = data["access_token"]
+def buscar_por_email(email):
+    return db.session.scalar(select(Usuario).where(Usuario.email == email.lower()))
 
-        if data.get("refresh_token"):
-            usuario.refresh_token = data["refresh_token"]
 
-    db.session.commit()
+def registrar_usuario(nome, email, senha):
+    if buscar_por_email(email):
+        raise ErroApi("Já existe uma conta com este e-mail.", 409)
 
+    usuario = Usuario(nome=nome, email=email.lower(), senha_hash=generate_password_hash(senha))
+    db.session.add(usuario)
+    try:
+        db.session.commit()
+    except IntegrityError as erro:
+        db.session.rollback()
+        raise ErroApi("Já existe uma conta com este e-mail.", 409) from erro
+    return usuario
+
+
+def autenticar_usuario(email, senha):
+    usuario = buscar_por_email(email)
+    if not usuario or not check_password_hash(usuario.senha_hash, senha):
+        raise ErroApi("E-mail ou senha incorretos.", 401)
     return usuario

@@ -1,66 +1,65 @@
 from flask import Blueprint, jsonify, request
-from politica.ext.db import db
-from politica.auth.models import Usuario
-from politica.legislation.models import ProjetoLei
-from politica.legislation.services import gerar_resumo_projeto_lei, obter_ou_criar_agenda_por_data
+
+from politica.auth.decorators import login_required, usuario_atual
+from politica.extensions import db
+from politica.legislation import services
+from politica.legislation.models import DiaEspecial, Parlamentar, ProjetoLei
+from politica.legislation.schemas import AgendaQuery, ParlamentaresQuery
+from politica.validacao import validar
 
 legislation_bp = Blueprint("legislation", __name__)
 
+
+@legislation_bp.get("/agenda")
+def agenda_do_dia():
+    filtros = validar(AgendaQuery, request.args.to_dict())
+    agenda = services.obter_ou_criar_agenda(filtros.data)
+    return jsonify(services.montar_agenda(agenda, usuario_atual(), filtros.apenas_seguidos))
+
+
+@legislation_bp.get("/projetos/<int:projeto_id>")
+def detalhe_projeto(projeto_id):
+    projeto = db.get_or_404(ProjetoLei, projeto_id)
+    return jsonify(services.detalhar_projeto(projeto, usuario_atual()))
+
+
 @legislation_bp.post("/projetos/<int:projeto_id>/analisar")
-def analisar_projeto(projeto_id):
-    projeto = ProjetoLei.query.get_or_404(projeto_id)
-    
-    # Agora a função retorna a string diretamente
-    resumo_ia = gerar_resumo_projeto_lei(projeto.titulo)
-    
-    if "Erro ao gerar resumo" in resumo_ia or "não configurada" in resumo_ia:
-        return jsonify({"error": resumo_ia}), 500
-        
-    projeto.resumo = resumo_ia
-    db.session.commit()
-    
-    return jsonify({"message": "Resumo gerado com sucesso", "resumo": projeto.resumo})
+@login_required
+def analisar_projeto(usuario, projeto_id):
+    projeto = db.get_or_404(ProjetoLei, projeto_id)
+    services.analisar_projeto(projeto)
+    return jsonify(services.detalhar_projeto(projeto, usuario))
+
+
+@legislation_bp.post("/dias-especiais/<int:dia_id>/contextualizar")
+@login_required
+def contextualizar_dia(usuario, dia_id):
+    dia = db.get_or_404(DiaEspecial, dia_id)
+    return jsonify(services.contextualizar_dia_especial(dia).to_dict())
+
+
+@legislation_bp.get("/parlamentares")
+def parlamentares():
+    filtros = validar(ParlamentaresQuery, request.args.to_dict())
+    return jsonify(services.listar_parlamentares(filtros, usuario_atual()))
+
+
+@legislation_bp.get("/parlamentares/seguidos")
+@login_required
+def parlamentares_seguidos(usuario):
+    return jsonify({"itens": services.listar_seguidos(usuario)})
+
 
 @legislation_bp.post("/parlamentares/<int:parlamentar_id>/seguir")
-def rota_seguir_parlamentar(parlamentar_id):
-    # Aqui você obtém o id do usuário logado (ex: via token JWT, session do Flask ou request.json)
-    # Exemplo simulado recebendo via JSON ou header de autenticação:
-    dados = request.get_json() or {}
-    usuario_id = dados.get("usuario_id") # Ou extraído do seu decorador de autenticação OAuth
-    
-    if not usuario_id:
-        return jsonify({"error": "Usuário não autenticado."}), 401
-        
-    resultado, status_code = seguir_parlamentar(usuario_id, parlamentar_id)
-    
-    if not resultado["sucesso"]:
-        return jsonify({"error": resultado["erro"]}), status_code
-        
-    return jsonify(resultado), 200
-    
-@legislation_bp.get("/agenda")
-def obter_agenda_dia():
-    data_str = request.args.get("data") # Ex: /api/legislation/agenda?data=2026-11-10
-    usuario_id = request.args.get("usuario_id", type=int)
-    
-    if not data_str:
-        return jsonify({"error": "O parâmetro 'data' (YYYY-MM-DD) é obrigatório."}), 400
-        
-    try:
-        # 1. Lazy loading: garante que o dia existe no banco (popula se for a primeira vez)
-        agenda = obter_ou_criar_agenda_por_data(data_str)
-    except Exception as e:
-        return jsonify({"error": f"Erro ao processar agenda: {str(e)}"}), 500
-        
-    # 2. Aplica a filtragem visual baseada nos parlamentares seguidos
-    projetos_filtrados = filtrar_projetos_por_usuario(agenda, usuario_id)
+@login_required
+def seguir(usuario, parlamentar_id):
+    parlamentar = services.seguir_parlamentar(usuario, parlamentar_id)
+    return jsonify(parlamentar.to_dict(True)), 201
 
-    dias_especiais_serializados = [{"nome": d.nome, "tipo": d.tipo} for d in agenda.dias_especiais]
 
-    return jsonify({
-        "id": agenda.id,
-        "data": agenda.date.strftime("%Y-%m-%d"),
-        "resumo_geral": agenda.resumo,
-        "feriados_e_civis": dias_especiais_serializados,
-        "projetos_lei": projetos_filtrados
-    })
+@legislation_bp.delete("/parlamentares/<int:parlamentar_id>/seguir")
+@login_required
+def deixar_de_seguir(usuario, parlamentar_id):
+    db.get_or_404(Parlamentar, parlamentar_id)
+    services.deixar_de_seguir(usuario, parlamentar_id)
+    return "", 204
