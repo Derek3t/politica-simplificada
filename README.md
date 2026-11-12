@@ -26,6 +26,7 @@ A API sobe em `http://localhost:5001/api`. A porta 5000 não é usada porque o A
 |---|---|
 | `flask importar-parlamentares` | Importa os deputados da API da Câmara |
 | `flask sincronizar-agenda AAAA-MM-DD` | Pré-carrega a agenda de um dia (padrão: hoje) |
+| `flask precarregar` | Pré-carrega deputados, agendas dos próximos e últimos dias e votações do mês |
 | `pytest` | Roda os testes automatizados |
 | `ruff check . && ruff format --check .` | Verifica lint e formatação |
 
@@ -41,6 +42,18 @@ npm run dev
 
 Acesse `http://localhost:5173`. O Vite encaminha `/api` para o Flask. Testes: `npm test`.
 
+### Pré-carga para apresentação
+
+A primeira consulta de cada dia leva alguns segundos e depende da API da Câmara estar no ar. Para a demonstração, rode antes:
+
+```bash
+flask precarregar                  # 7 dias antes e 10 depois de hoje, mais as votações do mês
+flask precarregar --ia             # também gera resumos e contextos com o Gemini (exige GEMINI_API_KEY)
+flask precarregar --passados 3 --futuros 14 --limite-ia 10
+```
+
+O comando é idempotente: se a Câmara falhar em algum dia ele avisa, termina com erro e basta rodar de novo para completar só o que faltou. Com `--ia`, os resumos são gerados para os projetos do Plenário mais próximos de hoje e ficam salvos no banco.
+
 ### Estrutura do backend
 
 ```
@@ -51,6 +64,7 @@ politica/
   errors.py           exceções da API e handlers JSON
   validacao.py        validação de entrada com Pydantic
   cli.py              comandos flask
+  precarga.py         pré-carga de dados para demonstração
   auth/               cadastro, login e sessão
   legislation/        agenda, projetos, parlamentares, integrações externas
   calendar_sync/      exportação de eventos em .ics
