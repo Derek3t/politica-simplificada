@@ -213,7 +213,7 @@ def diagrama_arquitetura():
             170,
             120,
             "Integrações",
-            ["integracoes.py", "timeout + retry", "isoladas para os testes"],
+            ["integracoes.py", "timeout + tentativas", "isoladas para os testes"],
             "#fff7ed",
             "#c2410c",
         ),

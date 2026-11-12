@@ -20,7 +20,7 @@ from politica import create_app
 from politica.config import TestingConfig
 from politica.extensions import db
 
-INTEGRANTES = ["Derek da Penha Teixeira", "João Gabriel Bouzan Louzada", "Victor Machado Martins"]
+INTEGRANTES = ["Derek da Penha Teixeira", "João Gabriel Louzada", "Victor Machado Martins"]
 GRUPO = "Grupo X"
 FORMATADOR = HtmlFormatter(nowrap=True, style="friendly")
 
@@ -279,9 +279,9 @@ def secao_codigo():
         "<h2>5.5 Cache de agenda e tratamento de falhas externas</h2>",
         definicao("politica/legislation/services.py", "obter_ou_criar_agenda"),
         "<p>O dia é consultado nas APIs externas apenas uma vez. Se a Câmara falhar, a transação é desfeita e nada fica salvo pela metade. Se duas requisições tentarem criar o mesmo dia ao mesmo tempo, a restrição única do banco dispara um <code>IntegrityError</code>, tratado devolvendo a agenda gravada pela outra requisição.</p>",
-        "<h2>5.6 Cliente das APIs externas com retry</h2>",
+        "<h2>5.6 Cliente das APIs externas com novas tentativas</h2>",
         definicao("politica/legislation/integracoes.py", "_buscar_json"),
-        definicao("politica/legislation/integracoes.py", "_sessao"),
+        "<p>Cada chamada tem tempo limite e até três tentativas, com pausa maior a cada falha. Se todas falharem, o erro vira <code>ErroServicoExterno</code> (resposta 502 em português) e nada é gravado pela metade.</p>",
         "<h2>5.7 Regras de negócio: destaque dos parlamentares seguidos</h2>",
         definicao("politica/legislation/services.py", "montar_agenda"),
         "<h2>5.8 Modelo com restrições de integridade</h2>",
@@ -340,7 +340,7 @@ def secao_criterios(backend, frontend):
 <tr><td>4</td><td>Interface e frontend</td><td>SPA em Vue 3 com Tailwind. Layout responsivo testado de 320 px a desktop: menu lateral fixo e barra de navegação inferior no celular. Estados de carregando, vazio e erro com nova tentativa.</td></tr>
 <tr><td>5</td><td>Testes automatizados</td><td>{backend} testes de backend (rotas, serviços, validação, integrações simuladas, cache, concorrência) e {frontend} testes de frontend (utilitários, cliente HTTP, componentes).</td></tr>
 <tr><td>6</td><td>Persistência e ORM</td><td>SQLAlchemy 2 com 8 tabelas, relacionamentos 1:N e N:N, restrições de unicidade, chaves estrangeiras com cascade, paginação e consultas agregadas (calendário). Migrations com Alembic.</td></tr>
-<tr><td>7</td><td>Qualidade, organização e boas práticas</td><td>Variáveis de ambiente com <code>.env</code> e <code>.env.example</code>; logging configurado; handlers de erro padronizados em JSON; timeout e retry nas integrações; lint e formatação com Ruff; histórico de commits por funcionalidade na branch <code>dev</code>; README com instruções.</td></tr>
+<tr><td>7</td><td>Qualidade, organização e boas práticas</td><td>Variáveis de ambiente com <code>.env</code> e <code>.env.example</code>; logging configurado; handlers de erro padronizados em JSON; timeout e novas tentativas nas integrações; lint e formatação com Ruff; histórico de commits por funcionalidade na branch <code>dev</code>; README com instruções.</td></tr>
 </table>
 <h2>Números do projeto</h2>
 <table>
@@ -394,7 +394,7 @@ def secao_desafios():
 <tr><td>O formato real da API da Câmara era diferente do que o código inicial assumia (a pauta traz a proposição aninhada e a votação usa <code>aprovacao</code> numérico, não booleano).</td><td>Antes de implementar, consultamos os endpoints reais e ajustamos o código e os dados de teste aos formatos observados.</td></tr>
 <tr><td>Volume de dados: um dia de comissões chegava a 499 itens e a primeira carga demorava 24 s.</td><td>Filtramos os tipos que o cidadão reconhece (PL, PLP, PEC, PDL, MPV etc.) e vinculamos autores só aos projetos do Plenário. O feed passou a mostrar o Plenário por padrão e a carga inicial caiu para cerca de 5 s; depois disso o dia vem do cache.</td></tr>
 <tr><td>Ruído nas votações: de 112 registros semanais, 102 eram requerimentos e mudanças de regime de tramitação.</td><td>Descartamos votações procedimentais e aceitamos votações de mérito mesmo sem objeto, reconhecendo-as pela descrição. Restaram 10 votações relevantes.</td></tr>
-<tr><td>Instabilidade da API externa: um evento lento derrubava a agenda inteira.</td><td>Timeout, retry com backoff exponencial, erro 502 com mensagem clara, transação desfeita (sem agenda parcial) e, nas votações, uso dos dados já salvos quando a Câmara está fora do ar.</td></tr>
+<tr><td>Instabilidade da API externa: um evento lento derrubava a agenda inteira.</td><td>Timeout, até três tentativas com pausa crescente, erro 502 com mensagem clara, transação desfeita (sem agenda parcial) e, nas votações, uso dos dados já salvos quando a Câmara está fora do ar.</td></tr>
 <tr><td>Segurança: o código inicial aceitava <code>usuario_id</code> e dados de login vindos do cliente sem validar.</td><td>Autenticação por e-mail e senha com hash, identidade apenas pela sessão do servidor e decorator <code>login_required</code>.</td></tr>
 <tr><td>Condição de corrida: duas requisições para um dia novo geravam erro 500 por violar a unicidade.</td><td>Tratamento do <code>IntegrityError</code> reaproveitando a agenda gravada pela outra requisição, com teste que reproduz a corrida.</td></tr>
 <tr><td>Respostas inesperadas da IA (JSON incompleto) poderiam gravar campos vazios.</td><td>Validação do JSON retornado; fora do formato, o usuário recebe erro 502 e nada é salvo.</td></tr>
