@@ -239,7 +239,8 @@ def secao_arquitetura():
   extensions.py      db, migrate, cors
   errors.py          exceções da API e handlers JSON
   validacao.py       validação de entrada com Pydantic
-  cli.py             comandos flask importar-parlamentares / sincronizar-agenda
+  cli.py             comandos flask (importar, sincronizar, precarregar)
+  precarga.py        pré-carga de dados para demonstração
   auth/              blueprint: models, schemas, services, decorators, routes
   legislation/       blueprint: models, schemas, services, integracoes, routes
   calendar_sync/     blueprint: exportação .ics
@@ -364,6 +365,7 @@ pip install -e ".[dev]"
 cp .env.example .env              # opcional: preencher GEMINI_API_KEY
 flask db upgrade                  # cria as tabelas
 flask importar-parlamentares      # importa os 513 deputados
+flask precarregar                 # opcional: agendas e votações para a demonstração
 flask run                         # API em http://localhost:5001</pre>
 <h2>Frontend</h2>
 <pre class="bloco" style="border-top:1px solid #e2e8f0;border-radius:4px">cd frontend
