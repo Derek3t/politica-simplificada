@@ -1,5 +1,4 @@
 import logging
-from dataclasses import dataclass, field
 from datetime import date, timedelta
 
 from sqlalchemy import func, select
@@ -14,21 +13,21 @@ logger = logging.getLogger(__name__)
 STATUS_SEM_CHAVE = 503
 
 
-@dataclass
 class Relatorio:
-    parlamentares_importados: int | None = None
-    falha_parlamentares: bool = False
-    agendas_carregadas: int = 0
-    projetos: int = 0
-    projetos_plenario: int = 0
-    dias_especiais: int = 0
-    falhas_agenda: list[date] = field(default_factory=list)
-    votacoes: int = 0
-    falha_votacoes: bool = False
-    resumos_gerados: int = 0
-    dias_explicados: int = 0
-    falhas_ia: int = 0
-    ia_indisponivel: bool = False
+    def __init__(self):
+        self.parlamentares_importados = None
+        self.falha_parlamentares = False
+        self.agendas_carregadas = 0
+        self.projetos = 0
+        self.projetos_plenario = 0
+        self.dias_especiais = 0
+        self.falhas_agenda = []
+        self.votacoes = 0
+        self.falha_votacoes = False
+        self.resumos_gerados = 0
+        self.dias_explicados = 0
+        self.falhas_ia = 0
+        self.ia_indisponivel = False
 
     @property
     def tem_falhas(self):

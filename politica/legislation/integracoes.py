@@ -1,19 +1,20 @@
 import json
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from flask import current_app
 from google import genai
 from google.genai import errors as genai_errors
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 from politica.errors import ErroApi, ErroServicoExterno
 
 logger = logging.getLogger(__name__)
 
 ID_ORGAO_PLENARIO = 180
+TENTATIVAS = 3
+PAUSA_ENTRE_TENTATIVAS = 0.5
 MAX_PAGINAS_VOTACOES = 6
 
 CAMPOS_ANALISE = ("resumo", "analise_impacto", "comparacao_internacional")
@@ -36,21 +37,19 @@ Explique a data "{nome}" ({data}) e responda apenas com um JSON contendo as chav
 Não invente fatos; se não souber, diga que a informação não está disponível."""
 
 
-def _sessao():
-    tentativas = Retry(total=2, backoff_factor=0.5, status_forcelist=(429, 500, 502, 503, 504))
-    sessao = requests.Session()
-    sessao.mount("https://", HTTPAdapter(max_retries=tentativas))
-    return sessao
-
-
 def _buscar_json(url, params, timeout, servico):
-    try:
-        resposta = _sessao().get(url, params=params, timeout=timeout)
-        resposta.raise_for_status()
-        return resposta.json()
-    except (requests.RequestException, ValueError) as erro:
-        logger.warning("Falha ao consultar %s em %s: %s", servico, url, erro)
-        raise ErroServicoExterno(f"{servico} indisponível no momento.") from erro
+    for tentativa in range(1, TENTATIVAS + 1):
+        try:
+            resposta = requests.get(url, params=params, timeout=timeout)
+            resposta.raise_for_status()
+            return resposta.json()
+        except (requests.RequestException, ValueError) as erro:
+            logger.warning(
+                "Falha ao consultar %s em %s (tentativa %s de %s): %s", servico, url, tentativa, TENTATIVAS, erro
+            )
+            if tentativa == TENTATIVAS:
+                raise ErroServicoExterno(f"{servico} indisponível no momento.") from erro
+            time.sleep(PAUSA_ENTRE_TENTATIVAS * tentativa)
 
 
 def _camara(caminho, **params):

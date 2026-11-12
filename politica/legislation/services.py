@@ -1,6 +1,5 @@
 import calendar
 import logging
-from collections import defaultdict
 from datetime import date, datetime, timedelta
 
 from sqlalchemy import func, select
@@ -236,16 +235,20 @@ def sincronizar_votacoes(inicio, fim):
     sincronizacoes_votacoes[(inicio, fim)] = datetime.now()
 
 
+def dia_vazio():
+    return {"feriados": [], "votacoes": 0, "projetos": 0}
+
+
 def montar_calendario(mes):
     ano, numero = (int(parte) for parte in mes.split("-"))
     inicio = date(ano, numero, 1)
     fim = date(ano, numero, calendar.monthrange(ano, numero)[1])
-    dias = defaultdict(lambda: {"feriados": [], "votacoes": 0, "projetos": 0})
+    dias = {}
 
     try:
         for feriado in feriados_do_ano(ano):
             if feriado["date"].startswith(mes):
-                dias[feriado["date"]]["feriados"].append(feriado["name"])
+                dias.setdefault(feriado["date"], dia_vazio())["feriados"].append(feriado["name"])
     except ErroServicoExterno:
         logger.warning("Feriados de %s indisponíveis para o calendário", ano)
 
@@ -259,7 +262,7 @@ def montar_calendario(mes):
         select(Votacao.data, func.count()).where(Votacao.data.between(inicio, fim)).group_by(Votacao.data)
     )
     for dia, quantidade in votacoes:
-        dias[dia.isoformat()]["votacoes"] = quantidade
+        dias.setdefault(dia.isoformat(), dia_vazio())["votacoes"] = quantidade
 
     projetos = db.session.execute(
         select(Agenda.data, func.count(ProjetoLei.id))
@@ -268,7 +271,7 @@ def montar_calendario(mes):
         .group_by(Agenda.data)
     )
     for dia, quantidade in projetos:
-        dias[dia.isoformat()]["projetos"] = quantidade
+        dias.setdefault(dia.isoformat(), dia_vazio())["projetos"] = quantidade
 
     return {"mes": mes, "dias": dict(sorted(dias.items()))}
 
