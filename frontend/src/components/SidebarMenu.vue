@@ -12,7 +12,7 @@ const itens = [
   { nome: 'Agenda', rota: '/agenda', icone: 'agenda' },
   { nome: 'Calendário', rota: '/calendario', icone: 'calendario' },
   { nome: 'Votações', rota: '/votacoes', icone: 'votacoes' },
-  { nome: 'Parlamentares', rota: '/parlamentares', icone: 'parlamentares' },
+  { nome: 'Parlamentares', curto: 'Deputados', rota: '/parlamentares', icone: 'parlamentares' },
 ]
 
 async function aoSair() {
@@ -70,12 +70,12 @@ async function aoSair() {
       v-for="item in itens"
       :key="item.rota"
       :to="item.rota"
-      class="flex flex-col items-center gap-0.5 px-3 text-xs text-slate-500"
+      class="flex min-w-0 flex-1 flex-col items-center gap-0.5 px-0.5 text-[10px] text-slate-500"
       active-class="!text-primaria"
       :exact-active-class="item.rota === '/' ? '!text-primaria' : ''"
     >
       <Icone :nome="item.icone" :tamanho="22" />
-      {{ item.nome }}
+      {{ item.curto ?? item.nome }}
     </RouterLink>
   </nav>
 </template>

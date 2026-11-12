@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { listarVotacoes } from '../api/legislation'
 import MensagemErro from '../components/MensagemErro.vue'
 import Paginacao from '../components/Paginacao.vue'
@@ -22,7 +23,8 @@ const ESTILO_STATUS = {
   'Em andamento': 'bg-amber-100 text-amber-700',
 }
 
-const periodo = ref('hoje')
+const route = useRoute()
+const periodo = ref(PERIODOS.some((p) => p.id === route.query.periodo) ? route.query.periodo : 'hoje')
 const status = ref('')
 const pagina = ref(1)
 const itens = ref([])
