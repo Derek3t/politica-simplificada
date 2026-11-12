@@ -7,12 +7,11 @@ const router = useRouter()
 const { usuario, logado, sair } = useAuth()
 
 const itens = [
-  { nome: 'Início', rota: '/', icone: 'inicio' },
-  { nome: 'Busca', rota: '/busca', icone: 'busca' },
   { nome: 'Agenda', rota: '/agenda', icone: 'agenda' },
   { nome: 'Calendário', rota: '/calendario', icone: 'calendario' },
   { nome: 'Votações', rota: '/votacoes', icone: 'votacoes' },
   { nome: 'Parlamentares', curto: 'Deputados', rota: '/parlamentares', icone: 'parlamentares' },
+  { nome: 'Busca', rota: '/busca', icone: 'busca' },
 ]
 
 async function aoSair() {
@@ -23,7 +22,7 @@ async function aoSair() {
 
 <template>
   <aside class="hidden w-64 shrink-0 flex-col bg-marinho p-5 text-white md:sticky md:top-0 md:flex md:h-screen">
-    <RouterLink to="/" class="flex items-center gap-3">
+    <RouterLink to="/agenda" class="flex items-center gap-3">
       <Icone nome="marca" :tamanho="32" />
       <span class="text-lg font-semibold leading-tight">Política<br />Simplificada</span>
     </RouterLink>
@@ -36,7 +35,6 @@ async function aoSair() {
         :to="item.rota"
         class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-200 hover:bg-marinho-claro"
         active-class="!bg-primaria !text-white"
-        :exact-active-class="item.rota === '/' ? '!bg-primaria !text-white' : ''"
       >
         <Icone :nome="item.icone" />
         {{ item.nome }}
@@ -58,7 +56,7 @@ async function aoSair() {
   </aside>
 
   <header class="flex items-center justify-between bg-marinho px-4 py-3 text-white md:hidden">
-    <RouterLink to="/" class="flex items-center gap-2 font-semibold">
+    <RouterLink to="/agenda" class="flex items-center gap-2 font-semibold">
       <Icone nome="marca" :tamanho="22" /> Política Simplificada
     </RouterLink>
     <button v-if="logado" type="button" class="text-sm text-slate-300" @click="aoSair">Sair</button>
@@ -72,7 +70,6 @@ async function aoSair() {
       :to="item.rota"
       class="flex min-w-0 flex-1 flex-col items-center gap-0.5 px-0.5 text-[10px] text-slate-500"
       active-class="!text-primaria"
-      :exact-active-class="item.rota === '/' ? '!text-primaria' : ''"
     >
       <Icone :nome="item.icone" :tamanho="22" />
       {{ item.curto ?? item.nome }}
