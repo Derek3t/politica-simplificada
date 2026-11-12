@@ -68,6 +68,7 @@ tests/                pytest
 | GET | `/api/legislation/projetos/<id>` | opcional |
 | POST | `/api/legislation/projetos/<id>/analisar` | sim |
 | POST | `/api/legislation/dias-especiais/<id>/contextualizar` | sim |
+| GET | `/api/legislation/busca?q=` | opcional |
 | GET | `/api/legislation/calendario?mes=AAAA-MM` | |
 | GET | `/api/legislation/votacoes?periodo=hoje\|semana\|mes&status=aprovado\|rejeitado\|andamento&pagina=` | |
 | GET | `/api/legislation/parlamentares?busca=&estado=&partido=&pagina=&por_pagina=` | opcional |
@@ -77,6 +78,7 @@ tests/                pytest
 
 ## Limitações conhecidas
 
+- A busca global procura apenas em dados já consultados e salvos no banco (agendas visitadas, votações sincronizadas e parlamentares importados).
 - Apenas a Câmara dos Deputados é consultada. Sessões do Congresso Nacional e o Senado não estão incluídos.
 - Votações só entram se forem de mérito (projetos, PECs, MPs). Requerimentos e mudanças de regime de tramitação são ignorados.
 - A autoria de projetos só é vinculada aos parlamentares para pautas do Plenário.

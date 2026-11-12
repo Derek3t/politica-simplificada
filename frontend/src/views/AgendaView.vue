@@ -22,7 +22,7 @@ const agenda = ref(null)
 const carregando = ref(false)
 const erro = ref('')
 const diaAberto = ref(null)
-const projetoAbertoId = ref(null)
+const projetoAbertoId = ref(Number(route.query.projeto) || null)
 
 let ultimaRequisicao = 0
 
