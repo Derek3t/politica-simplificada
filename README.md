@@ -83,3 +83,16 @@ tests/                pytest
 - Votações só entram se forem de mérito (projetos, PECs, MPs). Requerimentos e mudanças de regime de tramitação são ignorados.
 - A autoria de projetos só é vinculada aos parlamentares para pautas do Plenário.
 - Votações ficam em cache por 10 minutos. Se a API da Câmara estiver fora, são exibidos os dados já salvos.
+
+## Documentação
+
+O PDF de entrega fica em `docs/Documentacao_PoliticaSimplificada.pdf`. Ele é gerado a partir do código real (diagrama ER pelos metadados dos modelos, trechos de código e contagem de testes), com as capturas de `docs/img`.
+
+Para regerar após mudar o código, com o Google Chrome instalado:
+
+```bash
+pip install -e ".[docs]"
+python docs/gerar_documentacao.py
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --no-pdf-header-footer \
+  --print-to-pdf=docs/Documentacao_PoliticaSimplificada.pdf "file://$PWD/docs/documentacao.html"
+```
