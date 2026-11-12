@@ -22,6 +22,7 @@ TERMOS_PROCEDIMENTAIS = ("requerimento", "regime de tramitação")
 STATUS_VOTACAO = {"aprovado": True, "rejeitado": False}
 sincronizacoes_votacoes = {}
 cache_feriados = {}
+LIMITE_BUSCA = 10
 TIPOS_RELEVANTES = {"PL", "PLP", "PEC", "PDL", "MPV", "PLN", "PLV"}
 
 
@@ -295,11 +296,11 @@ def listar_votacoes(filtros):
 def listar_parlamentares(filtros, usuario):
     consulta = select(Parlamentar).order_by(Parlamentar.nome)
     if filtros.busca:
-        consulta = consulta.where(Parlamentar.nome.ilike(f"%{filtros.busca}%"))
+        consulta = consulta.where(Parlamentar.nome.icontains(filtros.busca, autoescape=True))
     if filtros.estado:
         consulta = consulta.where(Parlamentar.estado == filtros.estado.upper())
     if filtros.partido:
-        consulta = consulta.where(Parlamentar.partido.ilike(filtros.partido))
+        consulta = consulta.where(func.lower(Parlamentar.partido) == filtros.partido.lower())
 
     paginacao = db.paginate(consulta, page=filtros.pagina, per_page=filtros.por_pagina, error_out=False)
     seguidos = ids_seguidos(usuario)
@@ -308,6 +309,46 @@ def listar_parlamentares(filtros, usuario):
         "pagina": paginacao.page,
         "total_paginas": paginacao.pages,
         "total": paginacao.total,
+    }
+
+
+def buscar(termo, usuario):
+    seguidos = ids_seguidos(usuario)
+
+    parlamentares = db.session.scalars(
+        select(Parlamentar)
+        .where(Parlamentar.nome.icontains(termo, autoescape=True))
+        .order_by(Parlamentar.nome)
+        .limit(LIMITE_BUSCA)
+    )
+    projetos = db.session.execute(
+        select(ProjetoLei, Agenda.data)
+        .join(Agenda, ProjetoLei.agenda_id == Agenda.id)
+        .where(
+            ProjetoLei.codigo_pl.icontains(termo, autoescape=True) | ProjetoLei.titulo.icontains(termo, autoescape=True)
+        )
+        .order_by(Agenda.data.desc())
+        .limit(LIMITE_BUSCA)
+    )
+    votacoes = db.session.scalars(
+        select(Votacao)
+        .where(Votacao.objeto.icontains(termo, autoescape=True) | Votacao.descricao.icontains(termo, autoescape=True))
+        .order_by(Votacao.data.desc())
+        .limit(LIMITE_BUSCA)
+    )
+    dias_especiais = db.session.scalars(
+        select(DiaEspecial)
+        .join(Agenda, DiaEspecial.agenda_id == Agenda.id)
+        .where(DiaEspecial.nome.icontains(termo, autoescape=True))
+        .order_by(Agenda.data.desc())
+        .limit(LIMITE_BUSCA)
+    )
+
+    return {
+        "parlamentares": [p.to_dict(p.id in seguidos) for p in parlamentares],
+        "projetos": [{**p.to_dict(), "data": data.isoformat()} for p, data in projetos],
+        "votacoes": [v.to_dict() for v in votacoes],
+        "dias_especiais": [d.to_dict() for d in dias_especiais],
     }
 
 

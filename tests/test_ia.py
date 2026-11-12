@@ -54,3 +54,35 @@ def test_contextualizar_dia_especial(usuario_logado, projeto, monkeypatch):
 
     assert resposta.status_code == 200
     assert resposta.json["contexto_historico"] == "Origem"
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "[]",
+        "null",
+        '{"resumo": "só um campo"}',
+        '{"resumo": null, "analise_impacto": "a", "comparacao_internacional": "b"}',
+    ],
+)
+def test_resposta_fora_do_formato_da_ia_vira_erro_502(usuario_logado, projeto, app, monkeypatch, texto):
+    class Resposta:
+        pass
+
+    resposta = Resposta()
+    resposta.text = texto
+
+    class Modelos:
+        def generate_content(self, **kwargs):
+            return resposta
+
+    class Cliente:
+        def __init__(self, api_key):
+            self.models = Modelos()
+
+    app.config["GEMINI_API_KEY"] = "chave-de-teste"
+    monkeypatch.setattr(integracoes.genai, "Client", Cliente)
+
+    resposta_http = usuario_logado.post(f"/api/legislation/projetos/{projeto.projetos_lei[0].id}/analisar")
+
+    assert resposta_http.status_code == 502

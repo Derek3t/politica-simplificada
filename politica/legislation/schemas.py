@@ -21,7 +21,7 @@ class ParlamentaresQuery(BaseModel):
 
 
 class CalendarioQuery(BaseModel):
-    mes: str = Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
+    mes: str = Field(pattern=r"^[1-9]\d{3}-(0[1-9]|1[0-2])$")
 
 
 class VotacoesQuery(BaseModel):
@@ -29,3 +29,9 @@ class VotacoesQuery(BaseModel):
     status: Literal["aprovado", "rejeitado", "andamento"] | None = None
     pagina: int = Field(default=1, ge=1)
     por_pagina: int = Field(default=20, ge=1, le=100)
+
+
+class BuscaQuery(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    q: str = Field(min_length=2, max_length=100)

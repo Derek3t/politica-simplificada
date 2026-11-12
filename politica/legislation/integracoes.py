@@ -149,7 +149,11 @@ def _gerar_json(prompt, campos):
         logger.exception("Falha ao gerar conteúdo com o Gemini")
         raise ErroServicoExterno("Não foi possível gerar a análise com IA.") from erro
 
-    return {campo: str(dados.get(campo, "")) for campo in campos}
+    if not isinstance(dados, dict) or not all(isinstance(dados.get(campo), str) and dados[campo] for campo in campos):
+        logger.error("Resposta do Gemini fora do formato esperado: %s", resposta.text)
+        raise ErroServicoExterno("A IA devolveu uma resposta incompleta. Tente novamente.")
+
+    return {campo: dados[campo] for campo in campos}
 
 
 def analisar_com_gemini(texto):

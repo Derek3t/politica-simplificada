@@ -104,3 +104,7 @@ def test_valida_formato_do_mes(client, mes):
 
 def test_mes_e_obrigatorio(client):
     assert client.get("/api/legislation/calendario").status_code == 422
+
+
+def test_calendario_rejeita_ano_zero(client):
+    assert client.get("/api/legislation/calendario?mes=0000-05").status_code == 422
