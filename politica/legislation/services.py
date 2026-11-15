@@ -111,7 +111,7 @@ def obter_ou_criar_agenda_por_data(data_str: str) -> Agenda:
     # 3. Busca Feriados (Brasil API)
     ano = data_alvo.year
     try:
-        resp_feriados = requests.get(f"{BASE_URL_BRASIL_API}/{ano}")
+        resp_feriados = requests.get(f"{BASE_URL_BRASIL_API}/{ano}", timeout=5)
         if resp_feriados.status_code == 200:
             feriados = resp_feriados.json()
             for f in feriados:
@@ -122,8 +122,9 @@ def obter_ou_criar_agenda_por_data(data_str: str) -> Agenda:
                         agenda_ref=agenda.id
                     )
                     db.session.add(dia_especial)
-    except Exception:
-        pass # Falhas em APIs externas não devem quebrar o fluxo principal
+    except Exception as e:
+        db.session.rollback()  # Desfaz alterações pendentes para não sujar a sessão
+        current_app.logger.warning(f"Falha ao consultar Brasil API para o ano {ano}: {str(e)}")
 
     # 4. Busca Eventos/Pautas da Câmara para o dia
     params = {
@@ -134,41 +135,97 @@ def obter_ou_criar_agenda_por_data(data_str: str) -> Agenda:
     }
     
     try:
-        resp_eventos = requests.get(f"{BASE_URL_CAMARA}/eventos", params=params)
-        if resp_eventos.status_code == 200:
-            eventos = resp_eventos.json().get("dados", [])
-            for evento in eventos:
+        resp_eventos = requests.get(f"{BASE_URL_CAMARA}/eventos", params=params, timeout=5)
+        if resp_events.status_code == 200:
+            eventos = resp_events.json().get("dados", [])
+            
+            # Limita a quantidade de eventos processados no lazy loading para evitar timeout (ex: máximo de 4)
+            for evento in eventos[:4]:
                 if evento.get("situacao", "").lower() == "cancelada":
                     continue
                 
                 evento_id = evento["id"]
-                resp_pauta = requests.get(f"{BASE_URL_CAMARA}/eventos/{evento_id}/pauta")
+                resp_pauta = requests.get(f"{BASE_URL_CAMARA}/eventos/{evento_id}/pauta", timeout=5)
                 
                 if resp_pauta.status_code == 200:
                     itens_pauta = resp_pauta.json().get("dados", [])
-                    for item in itens_pauta:
+                    for item in itens_pauta[:3]: # Limita a 3 itens por pauta no MVP
                         uri_prop = item.get("uriProposicao")
                         ementa_formal = item.get("titulo") or item.get("descricao")
                         
                         if uri_prop:
-                            resp_prop = requests.get(uri_prop)
-                            if resp_prop.status_code == 200:
-                                ementa_formal = resp_prop.json().get("dados", {}).get("ementa", ementa_formal)
+                            try:
+                                resp_prop = requests.get(uri_prop, timeout=5)
+                                if resp_prop.status_code == 200:
+                                    ementa_formal = resp_prop.json().get("dados", {}).get("ementa", ementa_formal)
+                            except Exception:
+                                pass
                         
                         # Processa a tradução do juridiquês via Gemini
                         resumo_ia = gerar_resumo_projeto_lei(ementa_formal)
                         
                         projeto = ProjetoLei(
                             codigo_pl=item.get("codTipo", "PL") + " " + str(item.get("numero", "")),
-                            titulo=ementa_formal[:255],
+                            titulo=ementa_formal[:255] if ementa_formal else "Projeto sem título",
                             resumo=resumo_ia,
                             status="Em tramitação",
                             data_votacao=data_alvo,
                             agenda_ref=agenda.id
                         )
                         db.session.add(projeto)
-    except Exception:
-        pass
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erro ao consultar API da Câmara: {str(e)}")
 
     db.session.commit()
     return agenda
+
+
+def listar_ou_sincronizar_parlamentares(nome: str | None = None, uf: str | None = None) -> list[dict]:
+    """
+    Garante que os deputados estejam no banco (lazy load único) e retorna a lista filtrada.
+    """
+    # 1. Se o banco ainda não tem parlamentares, popula a partir da Câmara
+    if Parlamentar.query.first() is None:
+        try:
+            resp = requests.get(
+                f"{BASE_URL_CAMARA}/deputados",
+                params={"ordem": "ASC", "ordenarPor": "nome"},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                dados = resp.json().get("dados", [])
+                for dep in dados:
+                    parlamentar = Parlamentar(
+                        id_original=dep.get("id"),
+                        nome=dep.get("nome"),
+                        partido=dep.get("siglaPartido") or "S/PARTIDO",
+                        estado=dep.get("siglaUf") or "BR",
+                        foto_link=dep.get("urlFoto")
+                    )
+                    db.session.add(parlamentar)
+                db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Erro ao sincronizar deputados: {str(e)}")
+
+    # 2. Consulta no banco local aplicando filtros opcionais para o frontend
+    query = Parlamentar.query
+    if nome:
+        query = query.filter(Parlamentar.nome.ilike(f"%{nome}%"))
+    if uf:
+        query = query.filter(Parlamentar.estado == uf.upper())
+
+    parlamentares = query.order_by(Parlamentar.nome.asc()).all()
+
+    return [
+        {
+            "id": p.id,
+            "id_original": p.id_original,
+            "nome": p.nome,
+            "partido": p.partido,
+            "estado": p.estado,
+            "foto_link": p.foto_link
+        }
+        for p in parlamentares
+    ]

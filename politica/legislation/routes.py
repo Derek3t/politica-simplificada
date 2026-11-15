@@ -64,3 +64,11 @@ def obter_agenda_dia():
         "feriados_e_civis": dias_especiais_serializados,
         "projetos_lei": projetos_filtrados
     })
+
+@legislation_bp.get("/parlamentares")
+def obter_parlamentares():
+    nome = request.args.get("nome") # Ex: /api/legislation/parlamentares?nome=Adriana
+    uf = request.args.get("uf")     # Ex: /api/legislation/parlamentares?uf=ES
+    
+    lista = listar_ou_sincronizar_parlamentares(nome=nome, uf=uf)
+    return jsonify(lista), 200
