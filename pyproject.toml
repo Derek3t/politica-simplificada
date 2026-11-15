@@ -15,3 +15,6 @@ dependencies = [
     "requests>=2.31",
     "google-genai>=0.1.0",
 ]
+
+[tool.setuptools.packages.find]
+include = ["politica*"]
