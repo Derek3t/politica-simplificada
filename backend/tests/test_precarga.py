@@ -171,7 +171,7 @@ def test_ia_gera_resumos_respeitando_o_limite(camara, mensagens, monkeypatch):
         analisados.append(texto)
         return {"resumo": "Resumo", "analise_impacto": "Impacto", "comparacao_internacional": "Mundo"}
 
-    monkeypatch.setattr(integracoes, "analisar_com_gemini", analisar)
+    monkeypatch.setattr(integracoes, "analisar_com_ia", analisar)
     monkeypatch.setattr(
         integracoes,
         "contextualizar_dia_especial",
@@ -189,7 +189,7 @@ def test_ia_gera_resumos_respeitando_o_limite(camara, mensagens, monkeypatch):
 def test_ia_prioriza_os_dias_mais_proximos_de_hoje(camara, mensagens, monkeypatch):
     monkeypatch.setattr(
         integracoes,
-        "analisar_com_gemini",
+        "analisar_com_ia",
         lambda texto: {"resumo": "r", "analise_impacto": "i", "comparacao_internacional": "c"},
     )
 
@@ -203,7 +203,7 @@ def test_falha_da_ia_em_um_item_nao_para_os_outros(camara, mensagens, monkeypatc
     def analisar(texto):
         raise ErroServicoExterno("Não foi possível gerar a análise com IA.")
 
-    monkeypatch.setattr(integracoes, "analisar_com_gemini", analisar)
+    monkeypatch.setattr(integracoes, "analisar_com_ia", analisar)
     monkeypatch.setattr(
         integracoes,
         "contextualizar_dia_especial",

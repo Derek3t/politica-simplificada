@@ -34,7 +34,7 @@ def test_analisar_salva_resultado_e_nao_repete_chamada(usuario_logado, projeto, 
         chamadas.append(texto)
         return {"resumo": "Resumo simples", "analise_impacto": "Impacto", "comparacao_internacional": "Outros países"}
 
-    monkeypatch.setattr(integracoes, "analisar_com_gemini", analisar)
+    monkeypatch.setattr(integracoes, "analisar_com_ia", analisar)
     url = f"/api/legislation/projetos/{projeto.projetos_lei[0].id}/analisar"
 
     assert usuario_logado.post(url).json["resumo"] == "Resumo simples"
@@ -66,22 +66,33 @@ def test_contextualizar_dia_especial(usuario_logado, projeto, monkeypatch):
     ],
 )
 def test_resposta_fora_do_formato_da_ia_vira_erro_502(usuario_logado, projeto, app, monkeypatch, texto):
+    class Mensagem:
+        content = texto
+
+    class Escolha:
+        message = Mensagem()
+
     class Resposta:
-        pass
+        choices = [Escolha()]
 
-    resposta = Resposta()
-    resposta.text = texto
-
-    class Modelos:
-        def generate_content(self, **kwargs):
-            return resposta
+    class Chat:
+        def send(self, **kwargs):
+            return Resposta()
 
     class Cliente:
-        def __init__(self, api_key):
-            self.models = Modelos()
+        chat = Chat()
 
-    app.config["GEMINI_API_KEY"] = "chave-de-teste"
-    monkeypatch.setattr(integracoes.genai, "Client", Cliente)
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    app.config["OPENROUTER_API_KEY"] = "chave-de-teste"
+    monkeypatch.setattr(integracoes, "OpenRouter", Cliente)
 
     resposta_http = usuario_logado.post(f"/api/legislation/projetos/{projeto.projetos_lei[0].id}/analisar")
 

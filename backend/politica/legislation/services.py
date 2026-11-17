@@ -182,7 +182,7 @@ def detalhar_projeto(projeto, usuario):
 def analisar_projeto(projeto):
     if projeto.resumo:
         return projeto
-    analise = integracoes.analisar_com_gemini(projeto.titulo)
+    analise = integracoes.analisar_com_ia(projeto.titulo)
     for campo, valor in analise.items():
         setattr(projeto, campo, valor)
     db.session.commit()

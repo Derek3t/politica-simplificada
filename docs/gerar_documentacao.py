@@ -159,7 +159,7 @@ def secao_descricao():
 <table>
 <tr><th style="width:27%">Funcionalidade</th><th>Descrição</th></tr>
 <tr><td>Agenda diária</td><td>Linha do tempo com os projetos de lei na pauta do Plenário no dia escolhido e as votações do Senado (e, sem pauta da Câmara, da Câmara) já realizadas nele, faixa de navegação entre dias e opção de incluir as comissões. Projetos de parlamentares seguidos aparecem em destaque.</td></tr>
-<tr><td>Resumo por IA</td><td>Para cada projeto, o Gemini gera “o que significa”, impacto prático e panorama internacional. O resultado é salvo para não repetir a chamada. Exige <code>GEMINI_API_KEY</code> (ver seção 6).</td></tr>
+<tr><td>Resumo por IA</td><td>Para cada projeto, o OpenRouter gera “o que significa”, impacto prático e panorama internacional. O resultado é salvo para não repetir a chamada. Exige <code>OPENROUTER_API_KEY</code> (ver seção 6).</td></tr>
 <tr><td>Feriados e datas cívicas</td><td>Feriados nacionais da Brasil API, datas cívicas e feriados estaduais de data fixa (23 UFs), escolhidos no seletor “Meu estado”. O contexto histórico, a importância e o impacto legislativo vêm de um acervo curado no código, o que dispensa a IA para essas datas.</td></tr>
 <tr><td>Votações da Câmara e do Senado</td><td>Lista paginada das votações de mérito do Plenário das duas casas (hoje, semana ou mês), com filtro por casa e por status (Aprovado, Em andamento, Rejeitado).</td></tr>
 <tr><td>Como cada um votou</td><td>Ao abrir uma votação nominal, o sistema mostra o placar (Sim, Não, Abstenção, Ausente...) e, para quem está logado, o voto dos parlamentares que a pessoa segue.</td></tr>
@@ -170,7 +170,7 @@ def secao_descricao():
 <tr><td>Conta e login com Google</td><td>Cadastro por e-mail e senha ou login com OAuth 2.0 / OpenID Connect do Google. Sessão em cookie e validação dos dados no servidor.</td></tr>
 <tr><td>Google Calendar</td><td>Com o login Google, o botão “Adicionar ao Google Calendar” cria o evento de votação direto na agenda do usuário (Google Calendar API). Sem login, continua disponível o download de arquivo <code>.ics</code>, aceito por Outlook e Apple Calendário.</td></tr>
 </table>
-<div class="aviso"><b>Sobre a IA:</b> a integração com o Gemini está implementada e coberta por testes com respostas simuladas, mas só funciona com uma chave pessoal do Google AI Studio (<code>GEMINI_API_KEY</code>). Sem a chave, a API responde 503 com mensagem clara; as demais funcionalidades, inclusive o contexto curado de feriados e datas cívicas, não dependem dela.</div>
+<div class="aviso"><b>Sobre a IA:</b> a integração com o OpenRouter está implementada e coberta por testes com respostas simuladas, mas só funciona com uma chave pessoal do Google AI Studio (<code>OPENROUTER_API_KEY</code>). Sem a chave, a API responde 503 com mensagem clara; as demais funcionalidades, inclusive o contexto curado de feriados e datas cívicas, não dependem dela.</div>
 </section>"""
 
 
@@ -312,7 +312,7 @@ def secao_codigo():
         "<p>Os votos nominais da Câmara são baixados sob demanda, uma vez por votação (<code>votos_carregados</code>), em paralelo e com tolerância a falhas; os do Senado já chegam junto da votação. Votação simbólica não registra voto individual e é tratada como tal na interface.</p>",
         "<h2>5.12 Contexto de feriados e datas cívicas sem IA</h2>",
         definicao("politica/legislation/datas_civicas.py", "dias_especiais_extras"),
-        "<p>O acervo curado (feriados nacionais, datas cívicas e feriados estaduais) fica no código e é consultado em memória. Assim, o contexto histórico aparece mesmo sem chave do Gemini, e a IA só é chamada para o que não está no acervo.</p>",
+        "<p>O acervo curado (feriados nacionais, datas cívicas e feriados estaduais) fica no código e é consultado em memória. Assim, o contexto histórico aparece mesmo sem chave do OpenRouter, e a IA só é chamada para o que não está no acervo.</p>",
         "<h2>5.13 Testes automatizados</h2>",
         definicao("tests/test_agenda.py", "test_falha_da_camara_retorna_502_e_nao_grava_agenda"),
         definicao("tests/test_agenda.py", "test_projetos_de_parlamentar_seguido_aparecem_destacados"),
@@ -342,7 +342,7 @@ def secao_tecnologias():
 <tr><td>Pydantic 2</td><td>Validação de entrada declarativa no servidor. Substitui Flask-WTF porque o frontend é uma SPA que envia JSON, e não formulários HTML.</td></tr>
 <tr><td>Vue 3 + Vite</td><td>Frontend previsto na proposta. Componentes reutilizáveis, rotas no cliente e recarga instantânea no desenvolvimento.</td></tr>
 <tr><td>Tailwind CSS</td><td>Framework de CSS utilitário; entrega o layout responsivo (menu lateral no desktop, barra inferior no celular).</td></tr>
-<tr><td>Google Gemini</td><td>Gera resumo, impacto e comparação internacional em linguagem simples, respondendo em JSON validado pelo backend.</td></tr>
+<tr><td>OpenRouter</td><td>Gera resumo, impacto e comparação internacional em linguagem simples, respondendo em JSON validado pelo backend.</td></tr>
 <tr><td>APIs da Câmara, do Senado e Brasil API</td><td>Fontes abertas e gratuitas de pautas, votações, votos nominais, parlamentares e feriados. As consultas usam <code>requests</code>, com tempo limite, novas tentativas e paralelismo (<code>ThreadPoolExecutor</code>) onde há muitas chamadas pequenas.</td></tr>
 <tr><td>Authlib + Google Identity</td><td>Implementa o OAuth 2.0 / OpenID Connect do login com Google (validação de <code>state</code>, troca do código por tokens e leitura do perfil), previsto na proposta.</td></tr>
 <tr><td>Google Calendar API</td><td>Criação de eventos na agenda do usuário via REST, com o refresh token obtido no login. Alternativa sem login: arquivo <code>.ics</code>.</td></tr>
@@ -352,7 +352,7 @@ def secao_tecnologias():
 <ul>
 <li><b>OAuth 2.0 do Google e Google Calendar API implementados.</b> O login com Google convive com o cadastro por e-mail e senha, que continua útil para quem não tem conta Google ou para testes. A exportação em <code>.ics</code> foi mantida como alternativa que não exige login.</li>
 <li><b>Câmara e Senado.</b> As duas casas são importadas e votadas; o Senado não tem endpoint de pauta diária equivalente ao da Câmara, então ali aparecem as votações nominais de Plenário.</li>
-<li><b>Gemini depende de chave pessoal.</b> O código, a validação do JSON e os testes estão prontos, mas a chave não acompanha o projeto (é segredo). Por isso o contexto de feriados e datas cívicas foi curado no código, sem depender de IA.</li>
+<li><b>OpenRouter depende de chave pessoal.</b> O código, a validação do JSON e os testes estão prontos, mas a chave não acompanha o projeto (é segredo). Por isso o contexto de feriados e datas cívicas foi curado no código, sem depender de IA.</li>
 <li><b>Feriados estaduais por acervo próprio.</b> A Brasil API entrega apenas feriados nacionais; os estaduais de data fixa de 23 UFs foram catalogados no código. ES (feriado móvel), MG, GO e MT não têm feriado estadual de data fixa próprio; feriados municipais e móveis ficaram de fora.</li>
 </ul>
 </section>"""
@@ -393,7 +393,7 @@ def secao_execucao():
 python3 -m venv venv
 source venv/bin/activate          # no Windows: venv\\Scripts\\activate
 pip install -r requirements-dev.txt   # ou: pip install -e ".[dev]"
-cp .env.example .env              # opcional: chaves do Google e do Gemini
+cp .env.example .env              # opcional: chaves do Google e do OpenRouter
 flask db upgrade                  # cria as tabelas (5 migrations)
 flask importar-parlamentares      # importa deputados e senadores
 flask precarregar                 # opcional: agendas, votações e votos para a demonstração
@@ -407,7 +407,7 @@ npm run dev                       # http://localhost:5173</pre>
 <li>Abra <code>http://localhost:5173</code> e navegue pela Agenda, Votações, Calendário, Busca e Parlamentares.</li>
 <li>Escolha “Meu estado” na Agenda para ver o feriado estadual; abra uma votação para ver o placar e clique em um parlamentar para ver o histórico de posições.</li>
 <li>Crie uma conta em <b>Entrar → Cadastre-se</b> (ou use <b>Continuar com o Google</b>) para seguir parlamentares e adicionar votações ao calendário.</li>
-<li>Os resumos de IA exigem <code>GEMINI_API_KEY</code> no arquivo <code>.env</code>. Sem a chave a API responde 503 com uma mensagem clara e o restante do sistema funciona normalmente.</li>
+<li>Os resumos de IA exigem <code>OPENROUTER_API_KEY</code> no arquivo <code>.env</code>. Sem a chave a API responde 503 com uma mensagem clara e o restante do sistema funciona normalmente.</li>
 </ol>
 <h2>Login com Google e Google Calendar (opcional)</h2>
 <p>Funciona sem configuração extra apenas com e-mail e senha. Para habilitar o Google:</p>
@@ -446,7 +446,7 @@ def secao_desafios():
 <tr><td>A API do Senado usa outro formato (XML por padrão, códigos de voto diferentes e votos sem sigla).</td><td>Requisição com <code>Accept: application/json</code>, normalização dos códigos (por exemplo “Ausente”, “Presente, sem voto”) e rótulo “Sem registro” quando o voto vem vazio, o que antes violava um <code>NOT NULL</code>.</td></tr>
 <tr><td>Votos individuais: milhares de registros e votações simbólicas sem voto nominal.</td><td>Download sob demanda, uma vez por votação e em paralelo, marcado em <code>votos_carregados</code>; a interface explica que votação simbólica não tem voto individual.</td></tr>
 <tr><td>Migration do SQLite: trocar a unicidade de <code>id_original</code> por (<code>casa</code>, <code>id_original</code>) em uma restrição sem nome.</td><td>Modo <i>batch</i> do Alembic com <code>naming_convention</code>, testado em <code>upgrade</code>, <code>downgrade</code> e <code>upgrade</code> de novo.</td></tr>
-<tr><td>Sem chave do Gemini não havia contexto para feriados e datas cívicas.</td><td>Acervo curado no código (13 feriados nacionais, 11 datas cívicas e feriados estaduais de 23 UFs), com a IA usada apenas para o que ficar fora dele.</td></tr>
+<tr><td>Sem chave do OpenRouter não havia contexto para feriados e datas cívicas.</td><td>Acervo curado no código (13 feriados nacionais, 11 datas cívicas e feriados estaduais de 23 UFs), com a IA usada apenas para o que ficar fora dele.</td></tr>
 <tr><td>Testes que, sem querer, chamavam a internet e ficavam lentos ou instáveis.</td><td>Fixture automático <code>sem_rede</code> no <code>conftest.py</code> que bloqueia chamadas reais; cada teste simula só o que precisa.</td></tr>
 <tr><td>Barra de navegação do celular cortava itens em telas de 360 px.</td><td>Detectado em teste visual; os itens passaram a dividir a largura igualmente e o rótulo longo ganhou versão curta. Verificado de 320 px em diante.</td></tr>
 </table>
@@ -458,7 +458,7 @@ def secao_limitacoes():
 <section>
 <h1>10. Limitações e próximos passos</h1>
 <ul>
-<li>Os resumos de IA, o impacto e a comparação internacional dependem de uma chave do Gemini configurada; os testes cobrem o fluxo com respostas simuladas.</li>
+<li>Os resumos de IA, o impacto e a comparação internacional dependem de uma chave do OpenRouter configurada; os testes cobrem o fluxo com respostas simuladas.</li>
 <li>O Senado não tem endpoint de pauta diária; só as votações nominais de Plenário entram na plataforma. O histórico de posições considera apenas votações nominais (as simbólicas não registram voto individual) e os últimos meses.</li>
 <li>Os feriados estaduais cobrem as 23 UFs que têm data fixa própria (ES tem feriado móvel; MG, GO e MT não têm) e não incluem feriados municipais nem móveis.</li>
 <li>O app do Google está em modo de teste: só contas cadastradas como usuários de teste conseguem entrar com o Google até a tela de consentimento ser publicada e verificada.</li>

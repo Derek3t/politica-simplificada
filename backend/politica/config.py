@@ -16,8 +16,8 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-oss-20b")
     CAMARA_BASE_URL = "https://dadosabertos.camara.leg.br/api/v2"
     SENADO_BASE_URL = "https://legis.senado.leg.br/dadosabertos"
     BRASIL_API_URL = "https://brasilapi.com.br/api/feriados/v1"
@@ -44,7 +44,7 @@ class TestingConfig(Config):
     TESTING = True
     SECRET_KEY = "chave-de-teste"
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    GEMINI_API_KEY = ""
+    OPENROUTER_API_KEY = ""
     GOOGLE_CLIENT_ID = "id-de-teste"
     GOOGLE_CLIENT_SECRET = "segredo-de-teste"
     LOG_LEVEL = "WARNING"

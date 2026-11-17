@@ -33,7 +33,7 @@ def registrar_comandos(app):
     @click.option("--passados", type=click.IntRange(0, 60), default=7, show_default=True, help="Dias antes de hoje.")
     @click.option("--futuros", type=click.IntRange(0, 60), default=10, show_default=True, help="Dias depois de hoje.")
     @click.option("--forcar-parlamentares", is_flag=True, help="Reimporta os deputados mesmo se já existirem.")
-    @click.option("--ia", "com_ia", is_flag=True, help="Gera resumos e contextos com o Gemini.")
+    @click.option("--ia", "com_ia", is_flag=True, help="Gera resumos e contextos com IA.")
     @click.option("--limite-ia", type=click.IntRange(0, 50), default=5, show_default=True, help="Máximo por tipo.")
     def precarregar_dados(passados, futuros, forcar_parlamentares, com_ia, limite_ia):
         from politica.precarga import precarregar

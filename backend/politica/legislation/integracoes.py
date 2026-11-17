@@ -5,8 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from flask import current_app
-from google import genai
-from google.genai import errors as genai_errors
+from openrouter import OpenRouter
+from openrouter.errors import OpenRouterError
 
 from politica.errors import ErroApi, ErroServicoExterno
 
@@ -17,6 +17,8 @@ TENTATIVAS = 3
 PAUSA_ENTRE_TENTATIVAS = 0.5
 MAX_PAGINAS_VOTACOES = 6
 HEADERS_JSON = {"Accept": "application/json"}
+TIMEOUT_IA_MS = 30_000
+MAX_TOKENS_IA = 2000
 
 CAMPOS_ANALISE = ("resumo", "analise_impacto", "comparacao_internacional")
 CAMPOS_DIA_ESPECIAL = ("contexto_historico", "importancia", "impacto_legislativo")
@@ -178,30 +180,32 @@ def feriados_do_ano(ano):
 
 
 def _gerar_json(prompt, campos):
-    chave = current_app.config["GEMINI_API_KEY"]
+    chave = current_app.config["OPENROUTER_API_KEY"]
     if not chave:
         raise ErroApi("Chave da IA não configurada.", 503)
 
     try:
-        cliente = genai.Client(api_key=chave)
-        resposta = cliente.models.generate_content(
-            model=current_app.config["GEMINI_MODEL"],
-            contents=prompt,
-            config={"response_mime_type": "application/json"},
-        )
-        dados = json.loads(resposta.text)
-    except (genai_errors.APIError, ValueError, TypeError) as erro:
-        logger.exception("Falha ao gerar conteúdo com o Gemini")
+        with OpenRouter(api_key=chave, timeout_ms=TIMEOUT_IA_MS) as cliente:
+            resposta = cliente.chat.send(
+                model=current_app.config["OPENROUTER_MODEL"],
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
+                max_tokens=MAX_TOKENS_IA,
+            )
+        texto = resposta.choices[0].message.content
+        dados = json.loads(texto)
+    except (OpenRouterError, IndexError, ValueError, TypeError) as erro:
+        logger.exception("Falha ao gerar conteúdo com a IA")
         raise ErroServicoExterno("Não foi possível gerar a análise com IA.") from erro
 
     if not isinstance(dados, dict) or not all(isinstance(dados.get(campo), str) and dados[campo] for campo in campos):
-        logger.error("Resposta do Gemini fora do formato esperado: %s", resposta.text)
+        logger.error("Resposta da IA fora do formato esperado: %s", texto)
         raise ErroServicoExterno("A IA devolveu uma resposta incompleta. Tente novamente.")
 
     return {campo: dados[campo] for campo in campos}
 
 
-def analisar_com_gemini(texto):
+def analisar_com_ia(texto):
     return _gerar_json(PROMPT_ANALISE.format(texto=texto), CAMPOS_ANALISE)
 
 

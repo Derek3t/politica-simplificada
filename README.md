@@ -19,7 +19,7 @@ flask importar-parlamentares
 flask run
 ```
 
-A API sobe em `http://localhost:5001/api`. A porta 5000 não é usada porque o AirPlay Receiver do macOS a ocupa; ela está definida em `backend/.flaskenv`. Para o login com Google, veja a seção [Login com Google](#login-com-google). Em produção (`APP_ENV=production`) o app se recusa a subir sem uma `SECRET_KEY` própria. Sem `GEMINI_API_KEY` em `backend/.env` as rotas de análise com IA respondem 503; o resto funciona normalmente.
+A API sobe em `http://localhost:5001/api`. A porta 5000 não é usada porque o AirPlay Receiver do macOS a ocupa; ela está definida em `backend/.flaskenv`. Para o login com Google, veja a seção [Login com Google](#login-com-google). Em produção (`APP_ENV=production`) o app se recusa a subir sem uma `SECRET_KEY` própria. Sem `OPENROUTER_API_KEY` em `backend/.env` as rotas de análise com IA respondem 503; o resto funciona normalmente.
 
 ### Login com Google
 
@@ -60,7 +60,7 @@ A primeira consulta de cada dia leva alguns segundos e depende da API da Câmara
 
 ```bash
 flask precarregar                  # 7 dias antes e 10 depois de hoje, mais as votações do mês
-flask precarregar --ia             # também gera resumos e contextos com o Gemini (exige GEMINI_API_KEY)
+flask precarregar --ia             # também gera resumos e contextos com IA (exige OPENROUTER_API_KEY)
 flask precarregar --passados 3 --futuros 14 --limite-ia 10
 ```
 
@@ -119,7 +119,7 @@ docs/                   documentação técnica em PDF e gerador
 - Pautas e agenda diária vêm só da Câmara. Do Senado entram os senadores e as votações nominais de projetos (PEC, PLP, PL, PDL...), sem pauta.
 - O histórico de posições mostra só votações nominais: votação simbólica não registra o voto individual. A janela é de 90 dias; os votos são baixados uma vez e guardados no banco.
 - Feriados estaduais são de data fixa e cobrem 23 UFs (as demais não têm feriado estadual de data fixa próprio), de uma lista curada à mão em `datas_civicas.py` (não inclui feriados móveis nem municipais). O estado é escolhido pelo usuário e fica no navegador.
-- Feriados nacionais e datas cívicas têm texto de contexto escrito à mão e funcionam sem IA; a chave do Gemini só é necessária para resumir projetos de lei e explicar datas fora dessa lista.
+- Feriados nacionais e datas cívicas têm texto de contexto escrito à mão e funcionam sem IA; a chave do OpenRouter só é necessária para resumir projetos de lei e explicar datas fora dessa lista.
 - Votações só entram se forem de mérito (projetos, PECs, MPs). Requerimentos e mudanças de regime de tramitação são ignorados.
 - A autoria de projetos só é vinculada aos parlamentares para pautas do Plenário.
 - Votações ficam em cache por 10 minutos. Se a API da Câmara estiver fora, são exibidos os dados já salvos.

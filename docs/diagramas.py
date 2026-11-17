@@ -224,7 +224,7 @@ def diagrama_arquitetura():
             170,
             110,
             "Serviços externos",
-            ["APIs da Câmara e do Senado", "Brasil API (feriados)", "Google Gemini (IA)", "Google OAuth + Calendar"],
+            ["APIs da Câmara e do Senado", "Brasil API (feriados)", "OpenRouter (IA)", "Google OAuth + Calendar"],
             "#fff7ed",
             "#c2410c",
         ),

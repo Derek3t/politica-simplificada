@@ -44,7 +44,7 @@ cd ../frontend && npm run dev  # terminal 2 (porta 5173)
 - **Onde ficam os segredos?** No `backend/.env`, fora do git. O `.env.example` mostra as variáveis sem valores.
 - **Como o cookie de sessão é protegido?** `HttpOnly`, `SameSite=Lax`, `Secure` em produção e CORS restrito às origens configuradas.
 - **Como o login com Google funciona?** OAuth 2.0 / OpenID Connect com Authlib. O servidor valida o token, exige e-mail verificado, vincula a conta por `google_id` ou e-mail e guarda o refresh token para o Calendar.
-- **E a IA?** O código do Gemini está pronto e testado com respostas simuladas, mas exige uma chave pessoal. O contexto de feriados e datas cívicas é curado e não depende dela.
+- **E a IA?** O código do OpenRouter está pronto e testado com respostas simuladas, mas exige uma chave pessoal. O contexto de feriados e datas cívicas é curado e não depende dela.
 - **O que ficou de fora?** Pauta diária do Senado (não existe endpoint), feriados municipais e móveis, resumo por IA sem a chave.
 - **Como evitam repetir chamadas externas?** A agenda do dia fica salva no banco e os votos têm a marca `votos_carregados`.
 - **O que é uma condição de corrida?** Duas requisições criando o mesmo dia; a restrição única do banco gera `IntegrityError`, que é tratado devolvendo a agenda da outra requisição (há teste para isso).
