@@ -30,7 +30,7 @@ const ESTILO_STATUS = {
 }
 
 const route = useRoute()
-const periodo = ref(PERIODOS.some((p) => p.id === route.query.periodo) ? route.query.periodo : 'hoje')
+const periodo = ref(PERIODOS.some((p) => p.id === route.query.periodo) ? route.query.periodo : 'semana')
 const status = ref('')
 const casa = ref('')
 const votacaoAbertaId = ref(null)
