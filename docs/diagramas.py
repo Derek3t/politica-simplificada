@@ -8,11 +8,12 @@ POSICOES = {
     "usuarios": (10, 10),
     "usuario_parlamentar": (375, 10),
     "parlamentar": (740, 10),
-    "agenda": (10, 235),
-    "projetos_lei": (375, 235),
-    "historico": (740, 235),
-    "dias_especiais": (10, 385),
+    "historico": (375, 150),
+    "votos_parlamentares": (740, 235),
+    "agenda": (10, 310),
+    "projetos_lei": (375, 310),
     "votacoes": (740, 400),
+    "dias_especiais": (10, 450),
 }
 
 SELO_COR = {"PK": "#b45309", "FK": "#1d4ed8", "UK": "#047857"}
@@ -119,7 +120,7 @@ def diagrama_er(metadados):
                 linhas.append(_relacionamento(tabela, chave.column.table))
     caixas = [_caixa(tabelas[nome], x, y) for nome, (x, y) in POSICOES.items()]
     return (
-        '<svg viewBox="0 0 1000 590" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">'
+        '<svg viewBox="0 0 1000 660" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">'
         + "".join(linhas)
         + "".join(caixas)
         + "</svg>"
@@ -165,7 +166,7 @@ def diagrama_arquitetura():
             "Frontend (Vue 3 + Vite + Tailwind)",
             [
                 "views: Agenda, Votações, Calendário,",
-                "Busca, Parlamentares, Login",
+                "Busca, Parlamentares, Perfil, Login",
                 "components: modais, cards, paginação",
                 "api/: cliente HTTP (fetch)",
                 "composables/useAuth",
@@ -188,7 +189,7 @@ def diagrama_arquitetura():
             190,
             120,
             "Services",
-            ["regras de negócio", "cache de agenda e votações", "filtros, busca e calendário"],
+            ["regras de negócio", "cache de agenda, votações e votos", "filtros, busca e calendário"],
         ),
         _caixa_generica(
             585,
@@ -196,7 +197,7 @@ def diagrama_arquitetura():
             190,
             100,
             "Models (SQLAlchemy)",
-            ["8 tabelas", "constraints de unicidade", "migrations com Alembic"],
+            ["9 tabelas", "constraints de unicidade", "migrations com Alembic"],
         ),
         _caixa_generica(585, 355, 190, 55, "SQLite", ["politica.db"], "#ecfdf5", "#047857"),
         _caixa_generica(
@@ -205,7 +206,7 @@ def diagrama_arquitetura():
             200,
             100,
             "Infra transversal",
-            ["extensions.py e config.py (.env)", "errors.py (handlers JSON)", "logging"],
+            ["extensions.py e config.py (.env)", "errors.py (handlers JSON)", "Authlib (OAuth Google)", "logging"],
         ),
         _caixa_generica(
             820,
@@ -213,7 +214,7 @@ def diagrama_arquitetura():
             170,
             120,
             "Integrações",
-            ["integracoes.py", "timeout + tentativas", "isoladas para os testes"],
+            ["integracoes.py (Câmara, Senado)", "timeout + tentativas", "isoladas para os testes"],
             "#fff7ed",
             "#c2410c",
         ),
@@ -221,9 +222,9 @@ def diagrama_arquitetura():
             820,
             215,
             170,
-            100,
+            110,
             "Serviços externos",
-            ["API da Câmara", "Brasil API (feriados)", "Google Gemini (IA)"],
+            ["APIs da Câmara e do Senado", "Brasil API (feriados)", "Google Gemini (IA)", "Google OAuth + Calendar"],
             "#fff7ed",
             "#c2410c",
         ),

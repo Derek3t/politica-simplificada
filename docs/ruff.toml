@@ -1,0 +1,7 @@
+extend = "../backend/pyproject.toml"
+
+[lint.per-file-ignores]
+"*.py" = ["E402", "E501"]
+
+[lint.isort]
+known-first-party = ["politica", "diagramas"]
