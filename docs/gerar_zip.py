@@ -1,4 +1,4 @@
-"""Gera o zip de entrega: backend, frontend, README e o PDF de documentação.
+"""Gera o zip de entrega: backend, frontend, README e o PDF de documentação (README sem as menções a docs/).
 
 Uso: python docs/gerar_zip.py [NomeDoZip] [--com-git]
 O arquivo é criado na pasta acima do projeto, para não entrar dentro de si mesmo.
@@ -13,7 +13,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 PDF = Path("docs/Documentacao_PoliticaSimplificada.pdf")
 
 PASTAS_DA_ENTREGA = ("backend", "frontend")
-ARQUIVOS_DA_RAIZ = ("README.md", ".gitignore")
+ARQUIVOS_DA_RAIZ = (".gitignore",)
 
 PASTAS_IGNORADAS = {"venv", ".venv", "node_modules", "__pycache__", ".pytest_cache", ".ruff_cache", "dist", "instance"}
 ARQUIVOS_IGNORADOS = {".env", ".DS_Store"}
@@ -25,6 +25,16 @@ def deve_ignorar(caminho):
     if any(parte in PASTAS_IGNORADAS or parte.endswith(".egg-info") for parte in partes):
         return True
     return caminho.name in ARQUIVOS_IGNORADOS or caminho.name.endswith(SUFIXOS_IGNORADOS)
+
+
+def readme_da_entrega():
+    """README sem as menções a docs/, que não vai no zip: o PDF fica na raiz."""
+    texto = (RAIZ / "README.md").read_text()
+    texto = texto.replace(
+        "A documentação técnica fica em `docs/`.", "A documentação técnica está no PDF da raiz do projeto."
+    )
+    texto = "\n".join(linha for linha in texto.splitlines() if not linha.startswith("docs/ "))
+    return texto.split("\n## Documentação")[0].rstrip() + "\n"
 
 
 def arquivos_da_entrega():
@@ -43,6 +53,7 @@ def gerar(nome, com_git=False):
     if com_git:
         entregues += [(c, c.relative_to(RAIZ)) for c in sorted((RAIZ / ".git").rglob("*")) if c.is_file()]
     with zipfile.ZipFile(destino, "w", zipfile.ZIP_DEFLATED) as zip_:
+        zip_.writestr(f"{nome}/README.md", readme_da_entrega())
         for origem, relativo in entregues:
             zip_.write(origem, Path(nome) / relativo)
     return destino, len(entregues)
