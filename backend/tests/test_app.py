@@ -18,3 +18,13 @@ def test_producao_aceita_secret_key_definida():
         SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
     assert create_app(ComChave).config["SECRET_KEY"] == "valor-aleatorio-longo"
+
+
+def test_sqlite_usa_wal_e_espera_o_banco_liberar(tmp_path):
+    from sqlalchemy import create_engine, text
+
+    motor = create_engine(f"sqlite:///{tmp_path / 'teste.db'}")
+    with motor.connect() as conexao:
+        assert conexao.execute(text("PRAGMA journal_mode")).scalar() == "wal"
+        assert conexao.execute(text("PRAGMA busy_timeout")).scalar() == 30_000
+        assert conexao.execute(text("PRAGMA foreign_keys")).scalar() == 1
