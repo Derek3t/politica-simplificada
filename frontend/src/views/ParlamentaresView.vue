@@ -7,8 +7,8 @@ import MensagemErro from '../components/MensagemErro.vue'
 import Paginacao from '../components/Paginacao.vue'
 import ParlamentarCard from '../components/ParlamentarCard.vue'
 import { useAuth } from '../composables/useAuth'
+import { UFS } from '../composables/useRegiao'
 
-const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ')
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +17,7 @@ const { logado } = useAuth()
 const aba = ref('todos')
 const busca = ref('')
 const estado = ref('')
+const casa = ref('')
 const pagina = ref(1)
 const itens = ref([])
 const totalPaginas = ref(1)
@@ -36,7 +37,7 @@ async function carregar() {
       itens.value = (await listarSeguidos()).itens
       totalPaginas.value = 1
     } else {
-      const resposta = await listarParlamentares({ busca: busca.value, estado: estado.value, pagina: pagina.value })
+      const resposta = await listarParlamentares({ busca: busca.value, estado: estado.value, casa: casa.value, pagina: pagina.value })
       if (requisicao !== ultimaRequisicao) return
       itens.value = resposta.itens
       totalPaginas.value = resposta.total_paginas
@@ -70,7 +71,7 @@ async function alternarSeguir(parlamentar) {
   }
 }
 
-watch([busca, estado], () => {
+watch([busca, estado, casa], () => {
   clearTimeout(temporizador)
   temporizador = setTimeout(() => {
     pagina.value = 1
@@ -84,7 +85,7 @@ onUnmounted(() => clearTimeout(temporizador))
 <template>
   <div class="mx-auto max-w-3xl">
     <h1 class="text-2xl font-bold text-slate-900">Parlamentares</h1>
-    <p class="mt-1 text-slate-600">Veja quem são os deputados e acompanhe os que mais importam para você.</p>
+    <p class="mt-1 text-slate-600">Veja quem são deputados e senadores e acompanhe os que mais importam para você.</p>
 
     <div class="mt-5 flex gap-2">
       <button
@@ -110,6 +111,11 @@ onUnmounted(() => clearTimeout(temporizador))
           class="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 outline-none focus:ring-2 focus:ring-primaria"
         />
       </label>
+      <select v-model="casa" aria-label="Casa legislativa" class="rounded-lg border border-slate-300 bg-white px-3 py-2">
+        <option value="">Câmara e Senado</option>
+        <option value="Câmara">Deputados</option>
+        <option value="Senado">Senadores</option>
+      </select>
       <select v-model="estado" aria-label="Estado" class="rounded-lg border border-slate-300 bg-white px-3 py-2">
         <option value="">Todos os estados</option>
         <option v-for="uf in UFS" :key="uf" :value="uf">{{ uf }}</option>

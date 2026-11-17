@@ -4,12 +4,15 @@ import { useRoute, useRouter } from 'vue-router'
 import { obterCalendario } from '../api/legislation'
 import Icone from '../components/Icone.vue'
 import MensagemErro from '../components/MensagemErro.vue'
+import SeletorEstado from '../components/SeletorEstado.vue'
+import { useRegiao } from '../composables/useRegiao'
 import { diasDoCalendario, ehMesValido, formatarLonga, formatarMes, hoje, mesDe, somarMeses } from '../utils/datas'
 
 const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 const route = useRoute()
 const router = useRouter()
+const { uf } = useRegiao()
 
 const mes = computed(() => (ehMesValido(route.query.mes) ? route.query.mes : mesDe(hoje())))
 const dias = ref({})
@@ -24,7 +27,7 @@ async function carregar() {
   carregando.value = true
   erro.value = ''
   try {
-    const resposta = await obterCalendario(mes.value)
+    const resposta = await obterCalendario(mes.value, uf.value)
     if (requisicao === ultimaRequisicao) dias.value = resposta.dias
   } catch (e) {
     if (requisicao === ultimaRequisicao) erro.value = e.message
@@ -33,6 +36,7 @@ async function carregar() {
   }
 }
 
+watch(uf, carregar)
 watch(
   mes,
   () => {
@@ -60,6 +64,8 @@ const numeroDoDia = (iso) => Number(iso.slice(8))
         <Icone nome="direita" />
       </button>
     </div>
+
+    <div class="mt-3 flex justify-end"><SeletorEstado v-model="uf" /></div>
 
     <MensagemErro v-if="erro" class="mt-4" :mensagem="erro" @tentar-novamente="carregar" />
 
@@ -102,7 +108,7 @@ const numeroDoDia = (iso) => Number(iso.slice(8))
       </p>
       <ul v-else class="mt-2 space-y-2 text-sm">
         <li v-for="nome in resumo.feriados" :key="nome" class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
-          Feriado / Data Cívica · <strong>{{ nome }}</strong>
+          Feriado ou data cívica · <strong>{{ nome }}</strong>
         </li>
         <li v-if="resumo.projetos" class="rounded-xl border border-violet-200 bg-violet-50 p-3 text-violet-900">
           {{ resumo.projetos }} {{ resumo.projetos === 1 ? 'projeto' : 'projetos' }} na pauta do Plenário

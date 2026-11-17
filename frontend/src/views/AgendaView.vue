@@ -7,13 +7,16 @@ import DiaEspecialModal from '../components/DiaEspecialModal.vue'
 import Icone from '../components/Icone.vue'
 import MensagemErro from '../components/MensagemErro.vue'
 import ProjetoModal from '../components/ProjetoModal.vue'
+import SeletorEstado from '../components/SeletorEstado.vue'
 import TimelineItem from '../components/TimelineItem.vue'
 import { useAuth } from '../composables/useAuth'
+import { useRegiao } from '../composables/useRegiao'
 import { ehDataValida, formatarLonga, hoje, somarDias } from '../utils/datas'
 
 const route = useRoute()
 const router = useRouter()
 const { logado } = useAuth()
+const { uf } = useRegiao()
 
 const data = computed(() => (ehDataValida(route.query.data) ? route.query.data : hoje()))
 const incluirComissoes = ref(false)
@@ -34,6 +37,7 @@ async function carregar() {
     const resultado = await obterAgenda(data.value, {
       incluirComissoes: incluirComissoes.value,
       apenasSeguidos: apenasSeguidos.value,
+      uf: uf.value,
     })
     if (requisicao === ultimaRequisicao) agenda.value = resultado
   } catch (e) {
@@ -43,7 +47,10 @@ async function carregar() {
   }
 }
 
-watch([data, incluirComissoes, apenasSeguidos], carregar, { immediate: true })
+watch([data, incluirComissoes, apenasSeguidos, uf], carregar, { immediate: true })
+
+const ETIQUETAS = { civica: 'Data Cívica', estadual: 'Feriado estadual' }
+const etiquetaDoDia = (dia) => (dia.tipo === 'estadual' ? `${ETIQUETAS.estadual} · ${dia.uf}` : (ETIQUETAS[dia.tipo] ?? 'Feriado nacional'))
 
 const irPara = (iso) => router.push({ name: 'agenda', query: { data: iso } })
 const vazia = computed(() => agenda.value && !agenda.value.dias_especiais.length && !agenda.value.projetos_lei.length)
@@ -79,6 +86,7 @@ const vazia = computed(() => agenda.value && !agenda.value.dias_especiais.length
       <label v-if="logado" class="flex items-center gap-2">
         <input v-model="apenasSeguidos" type="checkbox" class="h-4 w-4 accent-blue-600" /> Só de parlamentares que sigo
       </label>
+      <SeletorEstado v-model="uf" />
     </div>
 
     <section class="mt-6">
@@ -99,9 +107,9 @@ const vazia = computed(() => agenda.value && !agenda.value.dias_especiais.length
         <ol v-else>
           <TimelineItem
             v-for="dia in agenda.dias_especiais"
-            :key="`dia-${dia.id}`"
+            :key="`dia-${dia.id ?? dia.nome}`"
             tipo="dia"
-            etiqueta="Feriado / Data Cívica"
+            :etiqueta="etiquetaDoDia(dia)"
             :titulo="dia.nome"
             @abrir="diaAberto = dia"
           />

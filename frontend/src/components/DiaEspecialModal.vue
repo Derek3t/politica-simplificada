@@ -11,6 +11,8 @@ defineEmits(['fechar'])
 
 const { logado } = useAuth()
 const dia = ref({ ...props.dia })
+const ETIQUETAS = { civica: 'Data Cívica', estadual: `Feriado estadual · ${props.dia.uf}` }
+const etiqueta = ETIQUETAS[props.dia.tipo] ?? 'Feriado nacional'
 const carregando = ref(false)
 const erro = ref('')
 
@@ -29,7 +31,7 @@ async function gerarContexto() {
 
 <template>
   <Modal @fechar="$emit('fechar')">
-    <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">Feriado / Data Cívica</span>
+    <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">{{ etiqueta }}</span>
     <p class="mt-2 text-sm text-slate-500">{{ formatarLonga(dia.data) }}</p>
     <h2 class="mt-1 pr-8 text-2xl font-bold text-slate-900">{{ dia.nome }}</h2>
 

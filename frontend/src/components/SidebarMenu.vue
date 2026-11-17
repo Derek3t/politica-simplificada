@@ -10,7 +10,7 @@ const itens = [
   { nome: 'Agenda', rota: '/agenda', icone: 'agenda' },
   { nome: 'Calendário', rota: '/calendario', icone: 'calendario' },
   { nome: 'Votações', rota: '/votacoes', icone: 'votacoes' },
-  { nome: 'Parlamentares', curto: 'Deputados', rota: '/parlamentares', icone: 'parlamentares' },
+  { nome: 'Parlamentares', curto: 'Congresso', rota: '/parlamentares', icone: 'parlamentares' },
   { nome: 'Busca', rota: '/busca', icone: 'busca' },
 ]
 

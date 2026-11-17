@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { analisarProjeto, obterProjeto, urlCalendario } from '../api/legislation'
+import { adicionarAoGoogle, analisarProjeto, obterProjeto, urlCalendario } from '../api/legislation'
 import { useAuth } from '../composables/useAuth'
 import Icone from './Icone.vue'
 import MensagemErro from './MensagemErro.vue'
@@ -9,11 +9,14 @@ import Modal from './Modal.vue'
 const props = defineProps({ projetoId: { type: Number, required: true } })
 defineEmits(['fechar'])
 
-const { logado } = useAuth()
+const { logado, usuario } = useAuth()
 const projeto = ref(null)
 const carregando = ref(true)
 const analisando = ref(false)
 const erro = ref('')
+const agendando = ref(false)
+const linkEvento = ref('')
+const erroGoogle = ref('')
 
 async function executar(acao, estado) {
   estado.value = true
@@ -29,6 +32,18 @@ async function executar(acao, estado) {
 
 const carregar = () => executar(() => obterProjeto(props.projetoId), carregando)
 const analisar = () => executar(() => analisarProjeto(props.projetoId), analisando)
+
+async function adicionarNoGoogle() {
+  agendando.value = true
+  erroGoogle.value = ''
+  try {
+    linkEvento.value = (await adicionarAoGoogle(props.projetoId)).link
+  } catch (e) {
+    erroGoogle.value = e.message
+  } finally {
+    agendando.value = false
+  }
+}
 
 onMounted(carregar)
 </script>
@@ -86,13 +101,28 @@ onMounted(carregar)
         </ul>
       </section>
 
-      <a
-        v-if="logado"
-        :href="urlCalendario(projeto.id)"
-        class="mt-6 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:border-primaria hover:text-primaria"
-      >
-        <Icone nome="baixar" :tamanho="16" /> Adicionar ao meu calendário (.ics)
-      </a>
+      <div v-if="logado" class="mt-6 flex flex-wrap items-center gap-3">
+        <button
+          v-if="usuario.google_calendar"
+          type="button"
+          :disabled="agendando || linkEvento !== ''"
+          class="inline-flex items-center gap-2 rounded-lg bg-primaria px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          @click="adicionarNoGoogle"
+        >
+          <Icone nome="calendario" :tamanho="16" />
+          {{ agendando ? 'Adicionando…' : linkEvento ? 'Adicionado!' : 'Adicionar ao Google Calendar' }}
+        </button>
+        <a
+          :href="urlCalendario(projeto.id)"
+          class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:border-primaria hover:text-primaria"
+        >
+          <Icone nome="baixar" :tamanho="16" /> Baixar .ics
+        </a>
+      </div>
+      <p v-if="linkEvento" class="mt-2 text-sm">
+        <a :href="linkEvento" target="_blank" rel="noopener" class="font-medium text-primaria underline">Abrir evento no Google Calendar</a>
+      </p>
+      <p v-if="erroGoogle" class="mt-2 text-sm text-red-600" role="alert">{{ erroGoogle }}</p>
     </template>
   </Modal>
 </template>

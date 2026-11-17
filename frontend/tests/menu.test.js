@@ -41,7 +41,7 @@ describe('SidebarMenu', () => {
       '/parlamentares',
       '/busca',
     ])
-    expect(links[3].text()).toBe('Deputados')
+    expect(links[3].text()).toBe('Congresso')
   })
 
   it('destaca apenas o item da rota atual', async () => {

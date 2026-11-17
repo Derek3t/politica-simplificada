@@ -18,9 +18,15 @@ defineEmits(['alternar-seguir'])
     />
     <span v-else class="h-12 w-12 rounded-full bg-slate-200" />
     <div class="min-w-0 flex-1">
-      <p class="truncate font-medium text-slate-900">{{ parlamentar.nome }}</p>
+      <RouterLink
+        :to="{ name: 'parlamentar', params: { id: parlamentar.id } }"
+        class="block truncate font-medium text-slate-900 hover:text-primaria hover:underline"
+      >
+        {{ parlamentar.nome }}
+      </RouterLink>
       <p class="text-sm text-slate-500">
         {{ parlamentar.partido }}/{{ parlamentar.estado }}
+        <span class="ml-1 text-xs text-slate-400">{{ parlamentar.casa === 'Senado' ? 'Senador(a)' : 'Deputado(a)' }}</span>
         <span v-if="posicionamento" class="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs">{{ posicionamento }}</span>
       </p>
     </div>

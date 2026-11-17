@@ -1,9 +1,11 @@
-import { mount } from '@vue/test-utils'
+import { RouterLinkStub, mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import DayStrip from '../src/components/DayStrip.vue'
 import FormCampo from '../src/components/FormCampo.vue'
 import Paginacao from '../src/components/Paginacao.vue'
+import BarrasDeVotos from '../src/components/BarrasDeVotos.vue'
 import ParlamentarCard from '../src/components/ParlamentarCard.vue'
+import SeletorEstado from '../src/components/SeletorEstado.vue'
 
 describe('FormCampo', () => {
   it('atualiza o v-model ao digitar', async () => {
@@ -42,7 +44,7 @@ describe('ParlamentarCard', () => {
   const parlamentar = { id: 1, nome: 'Maria Souza', partido: 'PT', estado: 'ES', foto_link: null, seguido: false }
 
   it('mostra Seguir e emite o evento ao clicar', async () => {
-    const card = mount(ParlamentarCard, { props: { parlamentar } })
+    const card = mount(ParlamentarCard, { props: { parlamentar }, global: { stubs: { RouterLink: RouterLinkStub } } })
 
     expect(card.text()).toContain('PT/ES')
     await card.find('button').trigger('click')
@@ -50,8 +52,17 @@ describe('ParlamentarCard', () => {
     expect(card.emitted('alternar-seguir')[0]).toEqual([parlamentar])
   })
 
+  it('o nome leva para o perfil do parlamentar', () => {
+    const card = mount(ParlamentarCard, { props: { parlamentar }, global: { stubs: { RouterLink: RouterLinkStub } } })
+
+    expect(card.findComponent(RouterLinkStub).props('to')).toEqual({ name: 'parlamentar', params: { id: 1 } })
+  })
+
   it('mostra Seguindo quando já segue', () => {
-    const card = mount(ParlamentarCard, { props: { parlamentar: { ...parlamentar, seguido: true } } })
+    const card = mount(ParlamentarCard, {
+      props: { parlamentar: { ...parlamentar, seguido: true } },
+      global: { stubs: { RouterLink: RouterLinkStub } },
+    })
 
     expect(card.find('button').text()).toBe('Seguindo')
   })
@@ -75,5 +86,27 @@ describe('Paginacao', () => {
 
     await paginacao.setProps({ pagina: 3 })
     expect(paginacao.findAll('button')[1].attributes('disabled')).toBeDefined()
+  })
+})
+
+describe('BarrasDeVotos', () => {
+  it('mostra quantidade e percentual de cada voto', () => {
+    const barras = mount(BarrasDeVotos, { props: { contagem: { Sim: 3, Não: 1 } } })
+
+    expect(barras.text()).toContain('3 (75%)')
+    expect(barras.text()).toContain('1 (25%)')
+  })
+})
+
+describe('SeletorEstado', () => {
+  it('lista os 27 estados e emite a escolha', async () => {
+    const seletor = mount(SeletorEstado, {
+      props: { modelValue: '', 'onUpdate:modelValue': (v) => seletor.setProps({ modelValue: v }) },
+    })
+
+    expect(seletor.findAll('option')).toHaveLength(28)
+    await seletor.find('select').setValue('ES')
+
+    expect(seletor.props('modelValue')).toBe('ES')
   })
 })
