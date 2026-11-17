@@ -158,7 +158,7 @@ def secao_descricao():
 <h2>Funcionalidades implementadas</h2>
 <table>
 <tr><th style="width:27%">Funcionalidade</th><th>Descrição</th></tr>
-<tr><td>Agenda diária</td><td>Linha do tempo com os projetos de lei na pauta do Plenário no dia escolhido, faixa de navegação entre dias e opção de incluir as comissões. Projetos de parlamentares seguidos aparecem em destaque.</td></tr>
+<tr><td>Agenda diária</td><td>Linha do tempo com os projetos de lei na pauta do Plenário no dia escolhido e as votações do Senado (e, sem pauta da Câmara, da Câmara) já realizadas nele, faixa de navegação entre dias e opção de incluir as comissões. Projetos de parlamentares seguidos aparecem em destaque.</td></tr>
 <tr><td>Resumo por IA</td><td>Para cada projeto, o Gemini gera “o que significa”, impacto prático e panorama internacional. O resultado é salvo para não repetir a chamada. Exige <code>GEMINI_API_KEY</code> (ver seção 6).</td></tr>
 <tr><td>Feriados e datas cívicas</td><td>Feriados nacionais da Brasil API, datas cívicas e feriados estaduais de data fixa (23 UFs), escolhidos no seletor “Meu estado”. O contexto histórico, a importância e o impacto legislativo vêm de um acervo curado no código, o que dispensa a IA para essas datas.</td></tr>
 <tr><td>Votações da Câmara e do Senado</td><td>Lista paginada das votações de mérito do Plenário das duas casas (hoje, semana ou mês), com filtro por casa e por status (Aprovado, Em andamento, Rejeitado).</td></tr>

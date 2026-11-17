@@ -137,7 +137,7 @@ backend/venv/bin/python docs/gerar_documentacao.py
   --print-to-pdf=docs/Documentacao_PoliticaSimplificada.pdf "file://$PWD/docs/documentacao.html"
 ```
 
-Para montar o zip de entrega (sem `venv`, `node_modules`, caches, `.env` e banco local; use `--sem-git` para deixar a pasta `.git` de fora):
+Para montar o zip de entrega (backend, frontend, README e o PDF, sem `venv`, `node_modules`, caches, `.env` e banco local; use `--com-git` para incluir a pasta `.git`):
 
 ```bash
 python docs/gerar_zip.py NomeDoZip

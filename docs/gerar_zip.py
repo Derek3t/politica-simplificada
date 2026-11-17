@@ -1,7 +1,8 @@
-"""Gera o zip de entrega sem ambiente virtual, caches, segredos e banco local.
+"""Gera o zip de entrega: backend, frontend, README e o PDF de documentação.
 
-Uso: python docs/gerar_zip.py [NomeDoZip] [--sem-git]
+Uso: python docs/gerar_zip.py [NomeDoZip] [--com-git]
 O arquivo é criado na pasta acima do projeto, para não entrar dentro de si mesmo.
+Ficam de fora ambiente virtual, caches, segredos, banco local e as ferramentas que geram o PDF.
 """
 
 import sys
@@ -9,45 +10,46 @@ import zipfile
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
+PDF = Path("docs/Documentacao_PoliticaSimplificada.pdf")
 
-PASTAS_IGNORADAS = {
-    "venv",
-    ".venv",
-    "node_modules",
-    "__pycache__",
-    ".pytest_cache",
-    ".ruff_cache",
-    "dist",
-    "instance",
-    ".idea",
-    ".vscode",
-}
-ARQUIVOS_IGNORADOS = {".env", ".DS_Store", "documentacao.html"}
-SUFIXOS_IGNORADOS = (".db", ".sqlite3", ".pyc", ".egg-info")
+PASTAS_DA_ENTREGA = ("backend", "frontend")
+ARQUIVOS_DA_RAIZ = ("README.md", ".gitignore")
+
+PASTAS_IGNORADAS = {"venv", ".venv", "node_modules", "__pycache__", ".pytest_cache", ".ruff_cache", "dist", "instance"}
+ARQUIVOS_IGNORADOS = {".env", ".DS_Store"}
+SUFIXOS_IGNORADOS = (".db", ".db-wal", ".db-shm", ".sqlite3", ".pyc")
 
 
-def deve_ignorar(caminho, incluir_git):
+def deve_ignorar(caminho):
     partes = caminho.relative_to(RAIZ).parts
-    if ".git" in partes and not incluir_git:
-        return True
-    if ".git" in partes:
-        return False
     if any(parte in PASTAS_IGNORADAS or parte.endswith(".egg-info") for parte in partes):
         return True
     return caminho.name in ARQUIVOS_IGNORADOS or caminho.name.endswith(SUFIXOS_IGNORADOS)
 
 
-def gerar(nome, incluir_git):
+def arquivos_da_entrega():
+    for pasta in PASTAS_DA_ENTREGA:
+        for caminho in sorted((RAIZ / pasta).rglob("*")):
+            if caminho.is_file() and not deve_ignorar(caminho):
+                yield caminho, caminho.relative_to(RAIZ)
+    for nome in ARQUIVOS_DA_RAIZ:
+        yield RAIZ / nome, Path(nome)
+    yield RAIZ / PDF, Path(PDF.name)
+
+
+def gerar(nome, com_git=False):
     destino = RAIZ.parent / f"{nome}.zip"
-    arquivos = sorted(c for c in RAIZ.rglob("*") if c.is_file() and not deve_ignorar(c, incluir_git))
+    entregues = list(arquivos_da_entrega())
+    if com_git:
+        entregues += [(c, c.relative_to(RAIZ)) for c in sorted((RAIZ / ".git").rglob("*")) if c.is_file()]
     with zipfile.ZipFile(destino, "w", zipfile.ZIP_DEFLATED) as zip_:
-        for arquivo in arquivos:
-            zip_.write(arquivo, Path(nome) / arquivo.relative_to(RAIZ))
-    return destino, len(arquivos)
+        for origem, relativo in entregues:
+            zip_.write(origem, Path(nome) / relativo)
+    return destino, len(entregues)
 
 
 if __name__ == "__main__":
     argumentos = [a for a in sys.argv[1:] if not a.startswith("--")]
     nome = argumentos[0] if argumentos else "PoliticaSimplificada"
-    destino, total = gerar(nome, incluir_git="--sem-git" not in sys.argv)
+    destino, total = gerar(nome, com_git="--com-git" in sys.argv)
     print(f"{destino} ({total} arquivos, {destino.stat().st_size / 1_000_000:.1f} MB)")

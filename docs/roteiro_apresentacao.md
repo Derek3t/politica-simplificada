@@ -34,7 +34,7 @@ cd ../frontend && npm run dev  # terminal 2 (porta 5173)
 | 2. Blueprints e rotas | `backend/politica/auth/`, `legislation/`, `calendar_sync/` | Três blueprints com routes, services, models e schemas; as rotas só orquestram. |
 | 3. Formulários e validação | `backend/politica/validacao.py`, `auth/schemas.py`, `frontend/src/components/FormCampo.vue` | Pydantic valida no servidor e devolve 422 por campo; o Vue mostra cada erro no campo certo. |
 | 4. Interface | `frontend/src/views/`, `SidebarMenu.vue` | Vue 3 + Tailwind, layout responsivo, estados de carregando, vazio e erro. |
-| 5. Testes | `backend/tests/`, `frontend/tests/` | 143 testes de backend e 46 de frontend; integrações externas simuladas, e o fixture `sem_rede` bloqueia chamadas reais. |
+| 5. Testes | `backend/tests/`, `frontend/tests/` | 147 testes de backend e 48 de frontend; integrações externas simuladas, e o fixture `sem_rede` bloqueia chamadas reais. |
 | 6. Persistência e ORM | `backend/politica/*/models.py`, `backend/migrations/` | 9 tabelas, relacionamentos 1:N e N:N, restrições de unicidade, 5 migrations; diagrama ER na seção 3 do PDF. |
 | 7. Qualidade | `.env.example`, `errors.py`, `integracoes.py` (`_buscar_json`), `ruff` | Variáveis de ambiente, logging, erros em JSON, timeout e novas tentativas nas APIs externas, lint e commits por funcionalidade. |
 
