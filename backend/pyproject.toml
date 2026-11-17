@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=70.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "politica-simplificada"
+version = "0.1.0"
+description = "Backend da Plataforma de Guia Político"
+requires-python = ">=3.10"
+dependencies = [
+    "Flask>=3.0",
+    "Flask-SQLAlchemy>=3.1",
+    "Flask-CORS>=4.0",
+    "Flask-Migrate>=4.0",
+    "requests>=2.31",
+    "google-genai>=1.0",
+    "python-dotenv>=1.0",
+    "pydantic[email]>=2.7",
+    "Authlib>=1.3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+docs = ["pygments>=2.17"]
+
+[tool.setuptools.packages.find]
+include = ["politica*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"politica/*/__init__.py" = ["F401"]
