@@ -156,7 +156,17 @@ def montar_agenda(agenda, usuario, apenas_seguidos=False, incluir_comissoes=Fals
         "data": agenda.data.isoformat(),
         "dias_especiais": [d.to_dict() for d in agenda.dias_especiais] + dias_especiais_extras(agenda.data, uf),
         "projetos_lei": projetos,
+        "votacoes": [] if apenas_seguidos else votacoes_do_dia(agenda.data, incluir_camara=not projetos),
     }
+
+
+def votacoes_do_dia(dia, incluir_camara):
+    """Votações já sincronizadas do dia. A pauta da Câmara já cobre as votações dela, então as da Câmara só
+    entram quando a pauta do dia está vazia; o Senado não tem pauta própria e sempre aparece."""
+    consulta = select(Votacao).where(Votacao.data == dia).order_by(Votacao.horario, Votacao.id)
+    if not incluir_camara:
+        consulta = consulta.where(Votacao.casa == "Senado")
+    return [v.to_dict() for v in db.session.scalars(consulta)]
 
 
 def detalhar_projeto(projeto, usuario):

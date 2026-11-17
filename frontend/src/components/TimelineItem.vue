@@ -12,6 +12,7 @@ defineEmits(['abrir'])
 const CORES = {
   projeto: 'bg-violet-100 text-violet-700',
   dia: 'bg-emerald-100 text-emerald-700',
+  votacao: 'bg-sky-100 text-sky-700',
 }
 </script>
 

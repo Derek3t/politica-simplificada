@@ -9,6 +9,7 @@ import MensagemErro from '../components/MensagemErro.vue'
 import ProjetoModal from '../components/ProjetoModal.vue'
 import SeletorEstado from '../components/SeletorEstado.vue'
 import TimelineItem from '../components/TimelineItem.vue'
+import VotacaoModal from '../components/VotacaoModal.vue'
 import { useAuth } from '../composables/useAuth'
 import { useRegiao } from '../composables/useRegiao'
 import { ehDataValida, formatarLonga, hoje, somarDias } from '../utils/datas'
@@ -26,6 +27,7 @@ const carregando = ref(false)
 const erro = ref('')
 const diaAberto = ref(null)
 const projetoAbertoId = ref(Number(route.query.projeto) || null)
+const votacaoAbertaId = ref(null)
 
 let ultimaRequisicao = 0
 
@@ -53,7 +55,10 @@ const ETIQUETAS = { civica: 'Data Cívica', estadual: 'Feriado estadual' }
 const etiquetaDoDia = (dia) => (dia.tipo === 'estadual' ? `${ETIQUETAS.estadual} · ${dia.uf}` : (ETIQUETAS[dia.tipo] ?? 'Feriado nacional'))
 
 const irPara = (iso) => router.push({ name: 'agenda', query: { data: iso } })
-const vazia = computed(() => agenda.value && !agenda.value.dias_especiais.length && !agenda.value.projetos_lei.length)
+const vazia = computed(
+  () => agenda.value && !agenda.value.dias_especiais.length && !agenda.value.projetos_lei.length && !agenda.value.votacoes.length,
+)
+const etiquetaDaVotacao = (v) => `Votação · ${v.casa}${v.objeto ? ` · ${v.objeto}` : ''}`
 </script>
 
 <template>
@@ -124,11 +129,22 @@ const vazia = computed(() => agenda.value && !agenda.value.dias_especiais.length
             :destacado="projeto.destacado"
             @abrir="projetoAbertoId = projeto.id"
           />
+          <TimelineItem
+            v-for="votacao in agenda.votacoes"
+            :key="`votacao-${votacao.id}`"
+            tipo="votacao"
+            :etiqueta="etiquetaDaVotacao(votacao)"
+            :horario="votacao.horario"
+            :titulo="votacao.objeto || votacao.descricao"
+            :descricao="votacao.objeto ? votacao.descricao : ''"
+            @abrir="votacaoAbertaId = votacao.id"
+          />
         </ol>
       </template>
     </section>
 
     <DiaEspecialModal v-if="diaAberto" :dia="diaAberto" @fechar="diaAberto = null" />
     <ProjetoModal v-if="projetoAbertoId" :projeto-id="projetoAbertoId" @fechar="projetoAbertoId = null" />
+    <VotacaoModal v-if="votacaoAbertaId" :votacao-id="votacaoAbertaId" @fechar="votacaoAbertaId = null" />
   </div>
 </template>

@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from politica.errors import ErroServicoExterno
 from politica.extensions import db
 from politica.legislation import integracoes
-from politica.legislation.models import Agenda, ProjetoLei
+from politica.legislation.models import Agenda, ProjetoLei, Votacao
 
 DATA = "2026-11-11"
 
@@ -211,3 +211,44 @@ def test_agenda_criada_ao_mesmo_tempo_por_outra_requisicao_nao_gera_erro(client,
 
     assert resposta.status_code == 200
     assert Agenda.query.count() == 1
+
+
+def adicionar_votacao(casa, dia, objeto):
+    db.session.add(
+        Votacao(id_original=f"{casa}-{objeto}-{dia}", casa=casa, data=dia, objeto=objeto, descricao="Votação nominal")
+    )
+    db.session.commit()
+
+
+def test_agenda_mostra_votacoes_do_senado_mesmo_com_pauta_da_camara(client, camara):
+    adicionar_votacao("Senado", date.fromisoformat(DATA), "PLP 299/2026")
+    adicionar_votacao("Câmara", date.fromisoformat(DATA), "PL 1/2026")
+
+    corpo = client.get(f"/api/legislation/agenda?data={DATA}").json
+
+    assert [(v["casa"], v["objeto"]) for v in corpo["votacoes"]] == [("Senado", "PLP 299/2026")]
+
+
+def test_agenda_sem_pauta_da_camara_mostra_tambem_votacoes_da_camara(client, monkeypatch):
+    dia = date(2026, 11, 12)
+    monkeypatch.setattr(integracoes, "eventos_do_dia", lambda data: [])
+    monkeypatch.setattr(integracoes, "pautas_dos_eventos", lambda ids: [])
+    monkeypatch.setattr(integracoes, "feriados_do_ano", lambda ano: [])
+    adicionar_votacao("Senado", dia, "PLP 299/2026")
+    adicionar_votacao("Câmara", dia, "PL 1/2026")
+
+    corpo = client.get("/api/legislation/agenda?data=2026-11-12").json
+
+    assert corpo["projetos_lei"] == []
+    assert {(v["casa"], v["objeto"]) for v in corpo["votacoes"]} == {
+        ("Senado", "PLP 299/2026"),
+        ("Câmara", "PL 1/2026"),
+    }
+
+
+def test_agenda_so_de_seguidos_nao_lista_votacoes(usuario_logado, camara):
+    adicionar_votacao("Senado", date.fromisoformat(DATA), "PLP 299/2026")
+
+    corpo = usuario_logado.get(f"/api/legislation/agenda?data={DATA}&apenas_seguidos=true").json
+
+    assert corpo["votacoes"] == []
